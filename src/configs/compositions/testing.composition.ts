@@ -3,7 +3,9 @@ import {
     TestingController
 } from "../../modules/testing/application/use-cases/delete-all-data.use-case";
 import {
-    blogsCommandRepository, deviceCommandRepository,
+    blogsCommandRepository,
+    deviceCommandRepository,
+    passwordRecoveryRepository,
     postsCommandRepository,
     tokenCommandRepository,
     usersCommandRepository
@@ -15,6 +17,7 @@ export const deleteAllDataUseCase = new DeleteAllDataUseCase(
     usersCommandRepository,
     tokenCommandRepository,
     deviceCommandRepository,
+    passwordRecoveryRepository
 );
 
 export const testingController = new TestingController(

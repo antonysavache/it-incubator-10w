@@ -21,7 +21,7 @@ export class EmailService {
 
     async sendRegistrationEmail(email: string, confirmationCode: string): Promise<boolean> {
         try {
-            console.log(`Attempting to send email to ${email}`);
+            console.log(`Attempting to send registration email to ${email}`);
             const confirmationLink = `${SETTINGS.CLIENT_URL}/confirm-email?code=${confirmationCode}`;
 
             const mailOptions = {
@@ -37,10 +37,40 @@ export class EmailService {
             };
 
             const info = await this.transporter.sendMail(mailOptions);
-            console.log('Email sent successfully:', info.messageId);
+            console.log('Registration email sent successfully:', info.messageId);
             return true;
         } catch (error) {
-            console.error('Failed to send email. Error:', error);
+            console.error('Failed to send registration email. Error:', error);
+            if (!this.transporter.isIdle()) {
+                await this.transporter.close();
+                this.initializeTransporter();
+            }
+            return false;
+        }
+    }
+
+    async sendPasswordRecoveryEmail(email: string, recoveryCode: string): Promise<boolean> {
+        try {
+            console.log(`Attempting to send password recovery email to ${email}`);
+            const recoveryLink = `${SETTINGS.CLIENT_URL}/password-recovery?recoveryCode=${recoveryCode}`;
+
+            const mailOptions = {
+                from: SETTINGS.EMAIL.SMTP.FROM,
+                to: email,
+                subject: 'Password Recovery',
+                html: `
+                    <h1>Password recovery</h1>
+                    <p>To finish password recovery please follow the link below:
+                        <a href='${recoveryLink}'>recovery password</a>
+                    </p>
+                `
+            };
+
+            const info = await this.transporter.sendMail(mailOptions);
+            console.log('Password recovery email sent successfully:', info.messageId);
+            return true;
+        } catch (error) {
+            console.error('Failed to send password recovery email. Error:', error);
             if (!this.transporter.isIdle()) {
                 await this.transporter.close();
                 this.initializeTransporter();

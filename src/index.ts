@@ -8,6 +8,7 @@ import {
     commentsQueryRepository,
     deviceCommandRepository,
     deviceQueryRepository,
+    passwordRecoveryRepository,
     postsCommandRepository,
     postsQueryRepository,
     tokenCommandRepository,
@@ -32,6 +33,7 @@ async function startApp() {
         tokenCommandRepository.init();
         tokenQueryRepository.init();
         userConfirmationRepository.init();
+        passwordRecoveryRepository.init();
         commentsCommandRepository.init();
         commentsQueryRepository.init();
         deviceCommandRepository.init();

@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { authController } from "../../../configs/compositions/auth.composition";
 import { authValidationMiddleware } from "../../../configs/compositions/auth.composition";
-import {jwtAuthMiddleware} from "../../../shared/infrastructures/middlewares/jwt-auth.middleware";
-import {rateLimiterMiddleware} from "../../../shared/infrastructures/middlewares/rate-limiter.middleware";
+import { jwtAuthMiddleware } from "../../../shared/infrastructures/middlewares/jwt-auth.middleware";
+import { rateLimiterMiddleware } from "../../../shared/infrastructures/middlewares/rate-limiter.middleware";
 
 export const authRouter = Router();
 
@@ -24,6 +24,16 @@ authRouter.post('/registration-email-resending',
     rateLimiterMiddleware('/registration-email-resending'),
     authValidationMiddleware.resendEmail,
     authController.resendConfirmation
+);
+
+authRouter.post('/password-recovery',
+    rateLimiterMiddleware('/password-recovery'),
+    authController.requestPasswordRecovery
+);
+
+authRouter.post('/new-password',
+    rateLimiterMiddleware('/new-password'),
+    authController.confirmPasswordRecovery
 );
 
 authRouter.post('/refresh-token', authController.refreshToken);

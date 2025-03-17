@@ -6,10 +6,13 @@ import { ResendConfirmationUseCase } from "../../modules/auth/application/use-ca
 import { RefreshTokenUseCase } from "../../modules/auth/application/use-cases/refresh-token.use-case";
 import { LogoutUseCase } from "../../modules/auth/application/use-cases/logout.use-case";
 import { GetMeUseCase } from "../../modules/auth/application/use-cases/get-me.use-case";
+import { RequestPasswordRecoveryUseCase } from "../../modules/auth/application/use-cases/request-password-recovery.use-case";
+import { ConfirmPasswordRecoveryUseCase } from "../../modules/auth/application/use-cases/confirm-password-recovery.use-case";
 import { EmailService } from "../../modules/auth/infrastructure/services/email.service";
 import { AuthValidationMiddleware } from "../../modules/auth/api/auth-validation.middleware";
 import {
     deviceCommandRepository, deviceQueryRepository,
+    passwordRecoveryRepository,
     tokenCommandRepository,
     tokenQueryRepository,
     userConfirmationRepository,
@@ -62,6 +65,17 @@ export const getMeUseCase = new GetMeUseCase(
     usersQueryRepository
 );
 
+export const requestPasswordRecoveryUseCase = new RequestPasswordRecoveryUseCase(
+    passwordRecoveryRepository,
+    emailService,
+    usersQueryRepository
+);
+
+export const confirmPasswordRecoveryUseCase = new ConfirmPasswordRecoveryUseCase(
+    passwordRecoveryRepository,
+    usersCommandRepository
+);
+
 export const authValidationMiddleware = new AuthValidationMiddleware(
     userConfirmationRepository,
     usersQueryRepository
@@ -74,5 +88,7 @@ export const authController = new AuthController(
     resendConfirmationUseCase,
     refreshTokenUseCase,
     logoutUseCase,
-    getMeUseCase
+    getMeUseCase,
+    requestPasswordRecoveryUseCase,
+    confirmPasswordRecoveryUseCase
 );

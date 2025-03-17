@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
-import {BlogsCommandRepository} from "../../../blogs/infrastructure/repositories/blogs-command.repository";
-import {PostsCommandRepository} from "../../../posts/infrastructure/repositories/posts-command.repository";
-import {UsersCommandRepository} from "../../../users/domain/infrastructures/repositories/users-command.repository";
-import {TokenCommandRepository} from "../../../auth/infrastructure/repositories/token-command.repository";
-import {DeviceCommandRepository} from "../../../auth/infrastructure/repositories/device-command.repository";
+import { BlogsCommandRepository } from "../../../blogs/infrastructure/repositories/blogs-command.repository";
+import { PostsCommandRepository } from "../../../posts/infrastructure/repositories/posts-command.repository";
+import { UsersCommandRepository } from "../../../users/domain/infrastructures/repositories/users-command.repository";
+import { TokenCommandRepository } from "../../../auth/infrastructure/repositories/token-command.repository";
+import { DeviceCommandRepository } from "../../../auth/infrastructure/repositories/device-command.repository";
+import {
+    PasswordRecoveryRepository
+} from "../../../auth/infrastructure/repositories/password-recovery-command.repository";
 
 export class DeleteAllDataUseCase {
     constructor(
@@ -11,7 +14,8 @@ export class DeleteAllDataUseCase {
         private postsCommandRepository: PostsCommandRepository,
         private usersCommandRepository: UsersCommandRepository,
         private tokenCommandRepository: TokenCommandRepository,
-        private deviceCommandRepository: DeviceCommandRepository
+        private deviceCommandRepository: DeviceCommandRepository,
+        private passwordRecoveryRepository: PasswordRecoveryRepository
     ) {}
 
     async execute(): Promise<void> {
@@ -20,7 +24,8 @@ export class DeleteAllDataUseCase {
             this.postsCommandRepository.deleteAll(),
             this.usersCommandRepository.deleteAll(),
             this.tokenCommandRepository.deleteAll(),
-            this.deviceCommandRepository.deleteAll()
+            this.deviceCommandRepository.deleteAll(),
+            this.passwordRecoveryRepository.deleteAll()
         ]);
     }
 }

@@ -6,9 +6,12 @@ import { ResendConfirmationUseCase } from '../application/use-cases/resend-confi
 import { RefreshTokenUseCase } from '../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../application/use-cases/logout.use-case';
 import { GetMeUseCase } from '../application/use-cases/get-me.use-case';
+import { RequestPasswordRecoveryUseCase } from '../application/use-cases/request-password-recovery.use-case';
+import { ConfirmPasswordRecoveryUseCase } from '../application/use-cases/confirm-password-recovery.use-case';
 import { LoginDTO } from "../application/interfaces/auth.interface";
 import { TOKEN_SETTINGS } from '../domain/interfaces/token.interface';
 import { RequestWithUser } from '../../../shared/types/express';
+import { PasswordRecoveryRequestDTO, PasswordRecoveryConfirmDTO } from '../domain/interfaces/password-recovery.interface';
 
 export class AuthController {
     constructor(
@@ -18,7 +21,9 @@ export class AuthController {
         private resendConfirmationUseCase: ResendConfirmationUseCase,
         private refreshTokenUseCase: RefreshTokenUseCase,
         private logoutUseCase: LogoutUseCase,
-        private getMeUseCase: GetMeUseCase
+        private getMeUseCase: GetMeUseCase,
+        private requestPasswordRecoveryUseCase: RequestPasswordRecoveryUseCase,
+        private confirmPasswordRecoveryUseCase: ConfirmPasswordRecoveryUseCase
     ) {}
 
     login = async (req: Request<{}, {}, LoginDTO>, res: Response) => {
@@ -166,6 +171,65 @@ export class AuthController {
         } catch (error) {
             console.error('Get me error:', error);
             return res.sendStatus(401);
+        }
+    }
+
+    requestPasswordRecovery = async (req: Request<{}, {}, PasswordRecoveryRequestDTO>, res: Response) => {
+        try {
+            const result = await this.requestPasswordRecoveryUseCase.execute(req.body.email);
+
+            if (result.isFailure()) {
+                const error = result.getError();
+
+                if (typeof error === 'object' && 'errorsMessages' in error) {
+                    return res.status(400).json(error);
+                }
+
+                if (error === 'Email service is temporarily unavailable') {
+                    return res.status(500).json({
+                        errorsMessages: [{ message: error, field: 'none' }]
+                    });
+                }
+
+                console.log('Error in password recovery, but returning 204 for security:', error);
+            }
+
+            return res.sendStatus(204);
+        } catch (error) {
+            console.error('Password recovery request error:', error);
+            return res.status(500).json({ error: 'Password recovery request failed' });
+        }
+    }
+
+    confirmPasswordRecovery = async (req: Request<{}, {}, PasswordRecoveryConfirmDTO>, res: Response) => {
+        try {
+            const result = await this.confirmPasswordRecoveryUseCase.execute(req.body);
+
+            if (result.isFailure()) {
+                const error = result.getError();
+
+                if (typeof error === 'object' && 'errorsMessages' in error) {
+                    return res.status(400).json(error);
+                }
+
+                const fieldMap: Record<string, string> = {
+                    'Invalid recovery code': 'recoveryCode',
+                    'Recovery code has already been used': 'recoveryCode',
+                    'Recovery code has expired': 'recoveryCode',
+                    'Failed to update password': 'newPassword'
+                };
+
+                const field = fieldMap[error as string] || 'recoveryCode';
+
+                return res.status(400).json({
+                    errorsMessages: [{ message: error as string, field: field }]
+                });
+            }
+
+            return res.sendStatus(204);
+        } catch (error) {
+            console.error('Password recovery confirmation error:', error);
+            return res.status(500).json({ error: 'Password recovery confirmation failed' });
         }
     }
 }
