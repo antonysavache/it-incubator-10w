@@ -23,9 +23,22 @@ export class ConfirmPasswordRecoveryUseCase {
                 });
             }
 
-            const passwordValidation = Password.validate(newPassword);
-            if (!passwordValidation.isValid) {
-                return Result.fail({ errorsMessages: passwordValidation.errors });
+            if (!newPassword?.trim()) {
+                return Result.fail({
+                    errorsMessages: [{
+                        message: "Password is required",
+                        field: "newPassword"
+                    }]
+                });
+            }
+
+            if (newPassword.length < 6 || newPassword.length > 20) {
+                return Result.fail({
+                    errorsMessages: [{
+                        message: "Password should be 6-20 characters",
+                        field: "newPassword"
+                    }]
+                });
             }
 
             const recovery = await this.passwordRecoveryRepository.findByCode(recoveryCode);
