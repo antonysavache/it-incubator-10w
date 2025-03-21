@@ -15,7 +15,8 @@ export class GetCommentsUseCase {
         sortBy?: string,
         sortDirection?: 'asc' | 'desc',
         pageNumber?: string,
-        pageSize?: string
+        pageSize?: string,
+        userId?: string
     ): Promise<Result<PageResponse<CommentViewModel>>> {
         const post = await this.postsQueryRepository.findById(postId);
         if (!post) {
@@ -27,7 +28,8 @@ export class GetCommentsUseCase {
             sortBy || DEFAULT_QUERY_PARAMS.sortBy,
             sortDirection || DEFAULT_QUERY_PARAMS.sortDirection,
             pageNumber || DEFAULT_QUERY_PARAMS.pageNumber,
-            pageSize || DEFAULT_QUERY_PARAMS.pageSize
+            pageSize || DEFAULT_QUERY_PARAMS.pageSize,
+            userId
         );
 
         return Result.ok(comments);

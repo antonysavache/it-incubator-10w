@@ -21,7 +21,7 @@ export class CommentsController {
         private updateCommentUseCase: UpdateCommentUseCase,
         private deleteCommentUseCase: DeleteCommentUseCase,
         private getCommentUseCase: GetCommentUseCase,
-        private updateLikeStatusUseCase: UpdateLikeStatusUseCase
+        private updateLikeStatusUseCase: UpdateLikeStatusUseCase,
     ) {}
 
     getComments = async (req: Request<{ postId: string }, {}, {}, QueryParams>, res: Response) => {

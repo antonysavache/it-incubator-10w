@@ -53,7 +53,8 @@ export class CommentEntity {
                 userId: this.userId,
                 userLogin: this.userLogin
             },
-            createdAt: this.createdAt
+            createdAt: this.createdAt,
+            likesInfo: { likesCount: 0, dislikesCount: 0, myStatus: 'None' }
         };
     }
 

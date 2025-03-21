@@ -6,7 +6,13 @@ import { UpdateCommentUseCase } from "../../modules/comments/application/use-cas
 import { DeleteCommentUseCase } from "../../modules/comments/application/use-cases/delete-comment.use-case";
 import { GetCommentUseCase } from "../../modules/comments/application/use-cases/get-comment.use-case";
 import { CommentsController } from "../../modules/comments/api/comments.controller";
-import {commentsCommandRepository, commentsQueryRepository, postsQueryRepository} from "./repositories";
+import {
+    commentsCommandRepository,
+    commentsQueryRepository,
+    likeStatusCommandRepository, likeStatusQueryRepository,
+    postsQueryRepository
+} from "./repositories";
+import {UpdateLikeStatusUseCase} from "../../modules/comments/application/use-cases/update-like-status.use-case";
 
 export const createCommentUseCase = new CreateCommentUseCase(
     commentsCommandRepository,
@@ -33,10 +39,18 @@ export const deleteCommentUseCase = new DeleteCommentUseCase(
     commentsQueryRepository
 );
 
+export const updateLikeStatusUseCase = new UpdateLikeStatusUseCase(
+    commentsQueryRepository,
+    likeStatusCommandRepository,
+    likeStatusQueryRepository
+);
+
+
 export const commentsController = new CommentsController(
     getCommentsUseCase,
     createCommentUseCase,
     updateCommentUseCase,
     deleteCommentUseCase,
     getCommentUseCase,
+    updateLikeStatusUseCase
 );
