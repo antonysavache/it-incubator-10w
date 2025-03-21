@@ -1,8 +1,10 @@
+// src/modules/comments/api/comments.router.ts
 import { Router } from "express";
 import { commentValidation } from "./comments-validation.middleware";
 import { handleValidationErrors } from "../../../shared/infrastructures/middlewares/error-handler.middleware";
 import { commentsController } from "../../../configs/compositions/comments.composition";
 import { jwtAuthMiddleware } from "../../../shared/infrastructures/middlewares/jwt-auth.middleware";
+import { likeStatusValidation } from "./like-status-validation.middleware";
 
 export const commentsRouter = Router();
 
@@ -33,4 +35,12 @@ commentsRouter.delete('/comments/:commentId',
 
 commentsRouter.get('/comments/:commentId',
     commentsController.getComment
+);
+
+// New like status endpoint
+commentsRouter.put('/comments/:commentId/like-status',
+    jwtAuthMiddleware,
+    likeStatusValidation,
+    handleValidationErrors,
+    commentsController.updateLikeStatus
 );

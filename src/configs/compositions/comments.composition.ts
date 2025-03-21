@@ -38,5 +38,5 @@ export const commentsController = new CommentsController(
     createCommentUseCase,
     updateCommentUseCase,
     deleteCommentUseCase,
-    getCommentUseCase
+    getCommentUseCase,
 );

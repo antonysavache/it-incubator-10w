@@ -19,7 +19,6 @@ export class CreateCommentUseCase {
         userId: string,
         userLogin: string
     ): Promise<Result<CommentViewModel>> {
-        // Validate content first
         const contentResult = CommentContent.create(content);
         if (contentResult.isFailure()) {
             return Result.fail(contentResult.getError());
@@ -40,7 +39,7 @@ export class CreateCommentUseCase {
         };
 
         const id = await this.commentsCommandRepository.create(commentData);
-        const comment = await this.commentsQueryRepository.findPublicById(id);
+        const comment = await this.commentsQueryRepository.findPublicById(id, userId);
 
         if (!comment) {
             return Result.fail('Failed to create comment');

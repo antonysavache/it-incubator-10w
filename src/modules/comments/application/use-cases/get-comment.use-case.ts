@@ -5,8 +5,8 @@ import { Result } from "../../../../shared/infrastructures/result";
 export class GetCommentUseCase {
     constructor(private commentsQueryRepository: CommentsQueryRepository) {}
 
-    async execute(id: string): Promise<Result<CommentViewModel>> {
-        const comment = await this.commentsQueryRepository.findPublicById(id);
+    async execute(id: string, userId?: string): Promise<Result<CommentViewModel>> {
+        const comment = await this.commentsQueryRepository.findPublicById(id, userId);
         if (!comment) {
             return Result.fail('Comment not found');
         }

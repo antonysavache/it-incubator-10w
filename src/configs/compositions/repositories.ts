@@ -15,6 +15,12 @@ import { DeviceQueryRepository } from "../../modules/auth/infrastructure/reposit
 import {
     PasswordRecoveryRepository
 } from "../../modules/auth/infrastructure/repositories/password-recovery-command.repository";
+import {
+    LikeStatusQueryRepository
+} from "../../modules/comments/infrastructure/repositories/like-status-query.repository";
+import {
+    LikeStatusCommandRepository
+} from "../../modules/comments/infrastructure/repositories/like-status-command.repository";
 
 export const blogsQueryRepository = new BlogsQueryRepository();
 export const blogsCommandRepository = new BlogsCommandRepository();
@@ -30,3 +36,5 @@ export const commentsQueryRepository = new CommentsQueryRepository();
 export const commentsCommandRepository = new CommentsCommandRepository();
 export const deviceCommandRepository = new DeviceCommandRepository();
 export const deviceQueryRepository = new DeviceQueryRepository();
+export const likeStatusCommandRepository = new LikeStatusCommandRepository();
+export const likeStatusQueryRepository = new LikeStatusQueryRepository();

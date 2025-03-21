@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { LikesInfo } from "./like-status.interface";
 
 export interface CommentCreateDTO {
     content: string;
@@ -12,6 +13,7 @@ export interface CommentViewModel {
         userLogin: string;
     };
     createdAt: string;
+    likesInfo: LikesInfo;
 }
 
 export interface CommentDatabaseModel {

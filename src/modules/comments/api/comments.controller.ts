@@ -1,11 +1,14 @@
+// src/modules/comments/api/comments.controller.ts
 import { Request, Response } from 'express';
 import { GetCommentsUseCase } from "../application/use-cases/get-comments.use-case";
 import { CreateCommentUseCase } from "../application/use-cases/create-comment.use-case";
 import { UpdateCommentUseCase } from "../application/use-cases/update-comment.use-case";
 import { DeleteCommentUseCase } from "../application/use-cases/delete-comment.use-case";
 import { GetCommentUseCase } from "../application/use-cases/get-comment.use-case";
+import { UpdateLikeStatusUseCase } from "../application/use-cases/update-like-status.use-case";
 import { RequestWithUser } from "../../../shared/types/express";
 import { QueryParams } from '../../../shared/models/common.model';
+import { LikeStatusUpdateDTO } from '../domain/interfaces/like-status.interface';
 
 interface CommentBodyModel {
     content: string;
@@ -17,16 +20,20 @@ export class CommentsController {
         private createCommentUseCase: CreateCommentUseCase,
         private updateCommentUseCase: UpdateCommentUseCase,
         private deleteCommentUseCase: DeleteCommentUseCase,
-        private getCommentUseCase: GetCommentUseCase
+        private getCommentUseCase: GetCommentUseCase,
+        private updateLikeStatusUseCase: UpdateLikeStatusUseCase
     ) {}
 
     getComments = async (req: Request<{ postId: string }, {}, {}, QueryParams>, res: Response) => {
+        const userId = (req as any).user?.id;
+
         const result = await this.getCommentsUseCase.execute(
             req.params.postId,
             req.query.sortBy,
             req.query.sortDirection,
             req.query.pageNumber,
-            req.query.pageSize
+            req.query.pageSize,
+            userId
         );
 
         if (result.isFailure()) {
@@ -61,7 +68,9 @@ export class CommentsController {
     }
 
     getComment = async (req: Request<{ commentId: string }>, res: Response) => {
-        const result = await this.getCommentUseCase.execute(req.params.commentId);
+        const userId = (req as any).user?.id;
+
+        const result = await this.getCommentUseCase.execute(req.params.commentId, userId);
 
         if (result.isFailure()) {
             return res.sendStatus(404);
@@ -111,6 +120,32 @@ export class CommentsController {
                 return res.sendStatus(403);
             }
             return res.sendStatus(400);
+        }
+
+        return res.sendStatus(204);
+    }
+
+    updateLikeStatus = async (req: RequestWithUser<{ commentId: string }, LikeStatusUpdateDTO>, res: Response) => {
+        const result = await this.updateLikeStatusUseCase.execute(
+            req.params.commentId,
+            req.user.id,
+            req.body
+        );
+
+        if (result.isFailure()) {
+            const error = result.getError();
+
+            if (error === 'Comment not found') {
+                return res.sendStatus(404);
+            }
+
+            if (typeof error === 'object' && 'errorsMessages' in error) {
+                return res.status(400).json(error);
+            }
+
+            return res.status(400).json({
+                errorsMessages: [{ message: error as string, field: 'likeStatus' }]
+            });
         }
 
         return res.sendStatus(204);

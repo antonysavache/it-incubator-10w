@@ -2,13 +2,24 @@ import { BaseQueryRepository } from "../../../../shared/infrastructures/reposito
 import { CommentDatabaseModel, CommentViewModel } from "../../domain/interfaces/comment.interface";
 import { WithId, ObjectId } from "mongodb";
 import { PageResponse, DEFAULT_QUERY_PARAMS } from "../../../../shared/models/common.model";
+import { LikeStatusQueryRepository } from "./like-status-query.repository";
 
 export class CommentsQueryRepository extends BaseQueryRepository<CommentDatabaseModel> {
+    private likeStatusQueryRepository: LikeStatusQueryRepository;
+
     constructor() {
         super('comments');
+        this.likeStatusQueryRepository = new LikeStatusQueryRepository();
     }
 
-    private toPublicViewModel(model: WithId<CommentDatabaseModel>): CommentViewModel {
+    init() {
+        super.init();
+        this.likeStatusQueryRepository.init();
+    }
+
+    private async toPublicViewModel(model: WithId<CommentDatabaseModel>, userId?: string): Promise<CommentViewModel> {
+        const likesInfo = await this.likeStatusQueryRepository.getLikesInfo(model._id.toString(), userId);
+
         return {
             id: model._id.toString(),
             content: model.content,
@@ -16,14 +27,15 @@ export class CommentsQueryRepository extends BaseQueryRepository<CommentDatabase
                 userId: model.userId,
                 userLogin: model.userLogin
             },
-            createdAt: model.createdAt
+            createdAt: model.createdAt,
+            likesInfo
         };
     }
 
-    async findPublicById(id: string): Promise<CommentViewModel | null> {
+    async findPublicById(id: string, userId?: string): Promise<CommentViewModel | null> {
         this.checkInit();
         const result = await this.collection.findOne({ _id: new ObjectId(id) });
-        return result ? this.toPublicViewModel(result) : null;
+        return result ? await this.toPublicViewModel(result, userId) : null;
     }
 
     async findByPostId(
@@ -31,7 +43,8 @@ export class CommentsQueryRepository extends BaseQueryRepository<CommentDatabase
         sortBy: string = DEFAULT_QUERY_PARAMS.sortBy,
         sortDirection: 'asc' | 'desc' = DEFAULT_QUERY_PARAMS.sortDirection,
         pageNumber: string = DEFAULT_QUERY_PARAMS.pageNumber,
-        pageSize: string = DEFAULT_QUERY_PARAMS.pageSize
+        pageSize: string = DEFAULT_QUERY_PARAMS.pageSize,
+        userId?: string
     ): Promise<PageResponse<CommentViewModel>> {
         this.checkInit();
 
@@ -49,12 +62,16 @@ export class CommentsQueryRepository extends BaseQueryRepository<CommentDatabase
             this.collection.countDocuments(filter)
         ]);
 
+        const commentViewModels = await Promise.all(
+            items.map(item => this.toPublicViewModel(item, userId))
+        );
+
         return {
             pagesCount: Math.ceil(totalCount / limit),
             page: Number(pageNumber),
             pageSize: limit,
             totalCount,
-            items: items.map(item => this.toPublicViewModel(item))
+            items: commentViewModels
         };
     }
 }
