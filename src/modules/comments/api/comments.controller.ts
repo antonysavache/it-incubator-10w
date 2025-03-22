@@ -69,6 +69,7 @@ export class CommentsController {
 
     getComment = async (req: Request<{ commentId: string }>, res: Response) => {
         const userId = (req as any).user?.id;
+        console.log(`GetComment: commentId=${req.params.commentId}, userId=${userId}`);
 
         const result = await this.getCommentUseCase.execute(req.params.commentId, userId);
 
@@ -126,11 +127,19 @@ export class CommentsController {
     }
 
     updateLikeStatus = async (req: RequestWithUser<{ commentId: string }, LikeStatusUpdateDTO>, res: Response) => {
+        console.log(`UpdateLikeStatus: commentId=${req.params.commentId}, userId=${req.user.id}, likeStatus=${req.body.likeStatus}`);
+
         const result = await this.updateLikeStatusUseCase.execute(
             req.params.commentId,
             req.user.id,
             req.body
         );
+
+        if (result.isFailure()) {
+            console.log(`Error updating like status:`, result.getError());
+        } else {
+            console.log(`Like status updated successfully`);
+        }
 
         if (result.isFailure()) {
             const error = result.getError();
