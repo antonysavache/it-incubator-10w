@@ -21,7 +21,7 @@ export const jwtAuthMiddleware = (req: RequestWithUser, res: Response, next: Nex
 
         req.user = {
             id: payload.userId,
-            login: payload.userLogin
+            login: payload.userLogin || ''  // Убедитесь, что login никогда не будет null
         };
 
         return next();

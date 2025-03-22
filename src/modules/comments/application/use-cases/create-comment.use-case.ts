@@ -19,20 +19,26 @@ export class CreateCommentUseCase {
         userId: string,
         userLogin: string
     ): Promise<Result<CommentViewModel>> {
+        // Проверка content
         const contentResult = CommentContent.create(content);
         if (contentResult.isFailure()) {
             return Result.fail(contentResult.getError());
         }
 
+        // Проверка существования поста
         const post = await this.postsQueryRepository.findById(postId);
         if (!post) {
             return Result.fail('Post not found');
         }
 
-        if (!userLogin) {
-            return Result.fail('User login is required');
-        }
+        // Убираем эту проверку, userLogin всегда будет передаваться из middleware
+        // if (!userLogin) {
+        //     return Result.fail({
+        //         errorsMessages: [{ message: "User login is required", field: "content" }]
+        //     });
+        // }
 
+        // Создаем комментарий
         const commentData = {
             _id: new ObjectId(),
             postId,

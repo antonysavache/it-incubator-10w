@@ -10,7 +10,11 @@ export interface JwtPayload {
 export class JwtService {
     static createJWT(userId: string, expiresIn: string, deviceId?: string): string {
         return jwt.sign(
-            { userId, deviceId: deviceId || uuidv4() },
+            {
+                userId,
+                userLogin: userId,
+                deviceId: deviceId || uuidv4()
+            },
             SETTINGS.JWT_SECRET,
             { expiresIn }
         );
