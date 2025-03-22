@@ -26,8 +26,22 @@ export class CommentsController {
     ) {}
 
     getComments = async (req: Request<{ postId: string }, {}, {}, QueryParams>, res: Response) => {
-        // Extract userId from req.user if it exists (handles both authenticated and unauthenticated requests)
-        const userId = req['user']?.id || (req as any).user?.id;
+        // Extract userId directly from auth header if not set by middleware
+        let userId = req['user']?.id || (req as any).user?.id;
+
+        // Direct token extraction as fallback
+        if (!userId && req.headers.authorization) {
+            try {
+                const token = req.headers.authorization.split(' ')[1];
+                const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string };
+                userId = payload.userId;
+                console.log(`Extracted userId=${userId} directly from token for comments list`);
+            } catch (e) {
+                console.error('Error extracting userId from token in comments list:', e);
+            }
+        }
+
+        console.log(`GetComments for postId=${req.params.postId} with userId=${userId || 'none'}`);
 
         const result = await this.getCommentsUseCase.execute(
             req.params.postId,
@@ -41,6 +55,14 @@ export class CommentsController {
         if (result.isFailure()) {
             return res.sendStatus(404);
         }
+
+        // For debugging: log received comments
+        console.log(`Returning ${result.getValue().items.length} comments with likes info:`,
+            result.getValue().items.map(c => ({
+                id: c.id,
+                myStatus: c.likesInfo.myStatus
+            }))
+        );
 
         return res.status(200).json(result.getValue());
     }

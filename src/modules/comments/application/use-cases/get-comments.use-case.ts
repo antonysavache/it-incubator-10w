@@ -18,6 +18,8 @@ export class GetCommentsUseCase {
         pageSize?: string,
         userId?: string
     ): Promise<Result<PageResponse<CommentViewModel>>> {
+        console.log(`GetCommentsUseCase executing with postId=${postId}, userId=${userId || 'none'}`);
+
         const post = await this.postsQueryRepository.findById(postId);
         if (!post) {
             return Result.fail('Post not found');
@@ -31,6 +33,9 @@ export class GetCommentsUseCase {
             pageSize || DEFAULT_QUERY_PARAMS.pageSize,
             userId
         );
+
+        // Log what we're returning
+        console.log(`GetCommentsUseCase returning ${comments.items.length} comments for user ${userId || 'none'}`);
 
         return Result.ok(comments);
     }
