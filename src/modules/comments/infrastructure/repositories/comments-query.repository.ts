@@ -18,6 +18,7 @@ export class CommentsQueryRepository extends BaseQueryRepository<CommentDatabase
     }
 
     private async toPublicViewModel(model: WithId<CommentDatabaseModel>, userId?: string): Promise<CommentViewModel> {
+        // Make sure userId is passed to getLikesInfo even when undefined/empty
         const likesInfo = await this.likeStatusQueryRepository.getLikesInfo(model._id.toString(), userId);
 
         return {

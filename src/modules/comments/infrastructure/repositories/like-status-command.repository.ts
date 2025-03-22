@@ -13,9 +13,13 @@ export class LikeStatusCommandRepository extends BaseCommandRepository<LikeStatu
         const now = new Date().toISOString();
 
         try {
+            console.log(`Finding/updating like status for userId=${userId}, commentId=${commentId}, status=${status}`);
+
             const existingStatus = await this.collection.findOne({ userId, commentId });
 
             if (existingStatus) {
+                console.log(`Found existing status: ${existingStatus.status}, updating to: ${status}`);
+
                 const result = await this.collection.updateOne(
                     { userId, commentId },
                     {
@@ -27,6 +31,8 @@ export class LikeStatusCommandRepository extends BaseCommandRepository<LikeStatu
                 );
                 return result.modifiedCount > 0;
             } else {
+                console.log(`No existing status found, creating new with status: ${status}`);
+
                 await this.create({
                     userId,
                     commentId,

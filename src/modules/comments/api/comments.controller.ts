@@ -25,7 +25,8 @@ export class CommentsController {
     ) {}
 
     getComments = async (req: Request<{ postId: string }, {}, {}, QueryParams>, res: Response) => {
-        const userId = (req as any).user?.id;
+        // Extract userId from req.user if it exists (handles both authenticated and unauthenticated requests)
+        const userId = req['user']?.id || (req as any).user?.id;
 
         const result = await this.getCommentsUseCase.execute(
             req.params.postId,
@@ -68,9 +69,11 @@ export class CommentsController {
     }
 
     getComment = async (req: Request<{ commentId: string }>, res: Response) => {
+        // Extract userId properly - ensure it comes from the JWT
         const userId = req['user']?.id || (req as any).user?.id;
 
-        console.log(`GetComment executed for commentId: ${req.params.commentId}, with userId: ${userId}`);
+        console.log(`GetComment controller for commentId: ${req.params.commentId}, userId: ${userId}`);
+        console.log(`Request headers:`, req.headers);
 
         const result = await this.getCommentUseCase.execute(req.params.commentId, userId);
 

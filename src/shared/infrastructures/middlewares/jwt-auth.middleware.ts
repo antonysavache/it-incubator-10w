@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken';
-import {NextFunction, Request,Response} from "express";
-import {SETTINGS} from "../../../configs/settings";
-import {RequestWithUser} from "../../types/express";
+import { NextFunction, Request, Response } from "express";
+import { SETTINGS } from "../../../configs/settings";
+import { RequestWithUser } from "../../types/express";
 
-export const jwtAuthMiddleware = (req: RequestWithUser, res: Response, next: NextFunction) => {
+export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunction) => {
     const auth = req.headers.authorization;
 
     if (!auth) {
@@ -19,12 +19,19 @@ export const jwtAuthMiddleware = (req: RequestWithUser, res: Response, next: Nex
     try {
         const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string, login: string };
 
-        req.user = {
+        // Set user info directly on req.user AND extend the Request object
+        req['user'] = {
             id: payload.userId,
             login: payload.login || ''
         };
 
-        console.log('JWT auth middleware set user:', req.user);
+        // Also set it on req to ensure it's accessible
+        (req as any).user = {
+            id: payload.userId,
+            login: payload.login || ''
+        };
+
+        console.log('JWT auth middleware set user:', req['user']);
 
         return next();
     } catch (e) {

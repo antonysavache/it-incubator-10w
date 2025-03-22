@@ -20,32 +20,39 @@ export class LikeStatusQueryRepository extends BaseQueryRepository<LikeStatusMod
 
         if (userId) {
             try {
+                console.log(`[LikeStatusQueryRepository] Looking for status for userId=${userId}, commentId=${commentId}`);
+
                 const userRecord = await this.collection.findOne({
                     commentId,
                     userId
                 });
 
-                console.log(`[LikeStatusQueryRepository] User record for userId=${userId}:`, userRecord);
+                console.log(`[LikeStatusQueryRepository] User record found:`, userRecord);
 
                 if (userRecord) {
                     myStatus = userRecord.status;
-                    console.log(`[LikeStatusQueryRepository] Found myStatus=${myStatus}`);
+                    console.log(`[LikeStatusQueryRepository] Setting myStatus=${myStatus}`);
                 }
             } catch (error) {
                 console.error(`[LikeStatusQueryRepository] Error finding user record:`, error);
             }
+        } else {
+            console.log(`[LikeStatusQueryRepository] No userId provided, status will be None`);
         }
 
-        const result = {
+        console.log(`[LikeStatusQueryRepository] Final likes info:`, {
+            likesCount,
+            dislikesCount,
+            myStatus
+        });
+
+        return {
             likesCount,
             dislikesCount,
             myStatus
         };
-
-        console.log(`[LikeStatusQueryRepository] Returning result:`, result);
-
-        return result;
     }
+
 
     async getUserStatus(commentId: string, userId: string): Promise<LikeStatusEnum> {
         this.checkInit();
