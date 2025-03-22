@@ -17,15 +17,18 @@ export const jwtAuthMiddleware = (req: RequestWithUser, res: Response, next: Nex
     }
 
     try {
-        const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string, userLogin: string };
+        const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string, login: string };
 
         req.user = {
             id: payload.userId,
-            login: payload.userLogin || ''  // Убедитесь, что login никогда не будет null
+            login: payload.login || ''
         };
+
+        console.log('JWT auth middleware set user:', req.user);
 
         return next();
     } catch (e) {
+        console.error('JWT auth middleware error:', e);
         return res.sendStatus(401);
     }
 };

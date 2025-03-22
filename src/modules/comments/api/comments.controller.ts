@@ -68,8 +68,9 @@ export class CommentsController {
     }
 
     getComment = async (req: Request<{ commentId: string }>, res: Response) => {
-        const userId = (req as any).user?.id;
-        console.log(`GetComment: commentId=${req.params.commentId}, userId=${userId}`);
+        const userId = req['user']?.id || (req as any).user?.id;
+
+        console.log(`GetComment executed for commentId: ${req.params.commentId}, with userId: ${userId}`);
 
         const result = await this.getCommentUseCase.execute(req.params.commentId, userId);
 

@@ -11,8 +11,8 @@ export class JwtService {
     static createJWT(userId: string, expiresIn: string, deviceId?: string): string {
         return jwt.sign(
             {
-                userId,
-                userLogin: userId,
+                userId, // Это должно быть передано корректно
+                login: userId, // Добавляем userLogin для полноты
                 deviceId: deviceId || uuidv4()
             },
             SETTINGS.JWT_SECRET,

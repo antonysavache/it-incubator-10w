@@ -6,47 +6,45 @@ export class LikeStatusQueryRepository extends BaseQueryRepository<LikeStatusMod
         super('commentLikeStatus');
     }
 
-// src/modules/comments/infrastructure/repositories/like-status-query.repository.ts
     async getLikesInfo(commentId: string, userId?: string): Promise<LikesInfo> {
         this.checkInit();
 
-        try {
-            // Нам нужны более подробные логи для отладки
-            console.log(`Getting likes info for commentId=${commentId}, userId=${userId}`);
+        console.log(`[LikeStatusQueryRepository] Getting likes info: commentId=${commentId}, userId=${userId}`);
 
-            const [likesCount, dislikesCount] = await Promise.all([
-                this.collection.countDocuments({ commentId, status: 'Like' }),
-                this.collection.countDocuments({ commentId, status: 'Dislike' })
-            ]);
+        const [likesCount, dislikesCount] = await Promise.all([
+            this.collection.countDocuments({ commentId, status: 'Like' }),
+            this.collection.countDocuments({ commentId, status: 'Dislike' })
+        ]);
 
-            console.log(`Found ${likesCount} likes and ${dislikesCount} dislikes`);
+        let myStatus: LikeStatusEnum = 'None';
 
-            let myStatus: LikeStatusEnum = 'None';
+        if (userId) {
+            try {
+                const userRecord = await this.collection.findOne({
+                    commentId,
+                    userId
+                });
 
-            if (userId) {
-                const userStatus = await this.collection.findOne({ commentId, userId });
-                console.log(`User status for userId=${userId}:`, userStatus);
+                console.log(`[LikeStatusQueryRepository] User record for userId=${userId}:`, userRecord);
 
-                if (userStatus) {
-                    myStatus = userStatus.status;
+                if (userRecord) {
+                    myStatus = userRecord.status;
+                    console.log(`[LikeStatusQueryRepository] Found myStatus=${myStatus}`);
                 }
+            } catch (error) {
+                console.error(`[LikeStatusQueryRepository] Error finding user record:`, error);
             }
-
-            console.log(`Returning myStatus=${myStatus}`);
-
-            return {
-                likesCount,
-                dislikesCount,
-                myStatus
-            };
-        } catch (error) {
-            console.error(`Error getting likes info for commentId=${commentId}:`, error);
-            return {
-                likesCount: 0,
-                dislikesCount: 0,
-                myStatus: 'None'
-            };
         }
+
+        const result = {
+            likesCount,
+            dislikesCount,
+            myStatus
+        };
+
+        console.log(`[LikeStatusQueryRepository] Returning result:`, result);
+
+        return result;
     }
 
     async getUserStatus(commentId: string, userId: string): Promise<LikeStatusEnum> {
