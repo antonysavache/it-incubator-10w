@@ -12,26 +12,32 @@ export class LikeStatusCommandRepository extends BaseCommandRepository<LikeStatu
 
         const now = new Date().toISOString();
 
-        const result = await this.collection.findOneAndUpdate(
-            { userId, commentId },
-            {
-                $set: {
-                    status,
-                    updatedAt: now
-                }
-            },
-            { returnDocument: 'after' }
-        );
+        try {
+            const existingStatus = await this.collection.findOne({ userId, commentId });
 
-        if (!result) {
-            await this.create({
-                userId,
-                commentId,
-                status
-            });
+            if (existingStatus) {
+                const result = await this.collection.updateOne(
+                    { userId, commentId },
+                    {
+                        $set: {
+                            status,
+                            updatedAt: now
+                        }
+                    }
+                );
+                return result.modifiedCount > 0;
+            } else {
+                await this.create({
+                    userId,
+                    commentId,
+                    status
+                });
+                return true;
+            }
+        } catch (error) {
+            console.error("Error updating like status:", error);
+            return false;
         }
-
-        return true;
     }
 
     async create(data: LikeStatusCreateModel): Promise<string> {

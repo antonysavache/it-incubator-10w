@@ -29,6 +29,10 @@ export class CreateCommentUseCase {
             return Result.fail('Post not found');
         }
 
+        if (!userLogin) {
+            return Result.fail('User login is required');
+        }
+
         const commentData = {
             _id: new ObjectId(),
             postId,

@@ -7,6 +7,10 @@ import { DeviceCommandRepository } from "../../../auth/infrastructure/repositori
 import {
     PasswordRecoveryRepository
 } from "../../../auth/infrastructure/repositories/password-recovery-command.repository";
+import {CommentsCommandRepository} from "../../../comments/infrastructure/repositories/comments-command.repository";
+import {
+    LikeStatusCommandRepository
+} from "../../../comments/infrastructure/repositories/like-status-command.repository";
 
 export class DeleteAllDataUseCase {
     constructor(
@@ -15,7 +19,9 @@ export class DeleteAllDataUseCase {
         private usersCommandRepository: UsersCommandRepository,
         private tokenCommandRepository: TokenCommandRepository,
         private deviceCommandRepository: DeviceCommandRepository,
-        private passwordRecoveryRepository: PasswordRecoveryRepository
+        private passwordRecoveryRepository: PasswordRecoveryRepository,
+        private commentsCommandRepository: CommentsCommandRepository,
+        private likeStatusCommandRepository: LikeStatusCommandRepository,
     ) {}
 
     async execute(): Promise<void> {
@@ -25,7 +31,9 @@ export class DeleteAllDataUseCase {
             this.usersCommandRepository.deleteAll(),
             this.tokenCommandRepository.deleteAll(),
             this.deviceCommandRepository.deleteAll(),
-            this.passwordRecoveryRepository.deleteAll()
+            this.passwordRecoveryRepository.deleteAll(),
+            this.commentsCommandRepository.deleteAll(),
+            this.likeStatusCommandRepository.deleteAll()
         ]);
     }
 }
