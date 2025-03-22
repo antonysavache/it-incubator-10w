@@ -9,42 +9,43 @@ export class LikeStatusQueryRepository extends BaseQueryRepository<LikeStatusMod
     async getLikesInfo(commentId: string, userId?: string): Promise<LikesInfo> {
         this.checkInit();
 
-        console.log(`[LikeStatusQueryRepository] Getting likes info: commentId=${commentId}, userId=${userId}`);
+        console.log(`[LIKES DEBUG] Getting likes for comment ${commentId} with userId ${userId || 'NONE'}`);
 
         const [likesCount, dislikesCount] = await Promise.all([
             this.collection.countDocuments({ commentId, status: 'Like' }),
             this.collection.countDocuments({ commentId, status: 'Dislike' })
         ]);
 
+        console.log(`[LIKES DEBUG] Counts: likes=${likesCount}, dislikes=${dislikesCount}`);
+
         let myStatus: LikeStatusEnum = 'None';
 
         if (userId) {
             try {
-                console.log(`[LikeStatusQueryRepository] Looking for status for userId=${userId}, commentId=${commentId}`);
+                // For debugging, get ALL like status records for this comment
+                const allLikes = await this.collection.find({ commentId }).toArray();
+                console.log(`[LIKES DEBUG] All like records for comment ${commentId}:`,
+                    allLikes.map(r => ({ userId: r.userId, status: r.status })));
 
                 const userRecord = await this.collection.findOne({
                     commentId,
                     userId
                 });
 
-                console.log(`[LikeStatusQueryRepository] User record found:`, userRecord);
+                console.log(`[LIKES DEBUG] User record for userId=${userId}:`, userRecord);
 
                 if (userRecord) {
                     myStatus = userRecord.status;
-                    console.log(`[LikeStatusQueryRepository] Setting myStatus=${myStatus}`);
+                    console.log(`[LIKES DEBUG] Setting myStatus to ${myStatus}`);
+                } else {
+                    console.log(`[LIKES DEBUG] No record found for userId=${userId}, setting myStatus=None`);
                 }
             } catch (error) {
-                console.error(`[LikeStatusQueryRepository] Error finding user record:`, error);
+                console.error(`[LIKES DEBUG] Error finding status:`, error);
             }
         } else {
-            console.log(`[LikeStatusQueryRepository] No userId provided, status will be None`);
+            console.log(`[LIKES DEBUG] No userId provided, setting myStatus=None`);
         }
-
-        console.log(`[LikeStatusQueryRepository] Final likes info:`, {
-            likesCount,
-            dislikesCount,
-            myStatus
-        });
 
         return {
             likesCount,

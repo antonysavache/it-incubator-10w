@@ -1,4 +1,4 @@
-// src/modules/comments/api/comments.controller.ts
+import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { GetCommentsUseCase } from "../application/use-cases/get-comments.use-case";
 import { CreateCommentUseCase } from "../application/use-cases/create-comment.use-case";
@@ -9,6 +9,7 @@ import { UpdateLikeStatusUseCase } from "../application/use-cases/update-like-st
 import { RequestWithUser } from "../../../shared/types/express";
 import { QueryParams } from '../../../shared/models/common.model';
 import { LikeStatusUpdateDTO } from '../domain/interfaces/like-status.interface';
+import {SETTINGS} from "../../../configs/settings";
 
 interface CommentBodyModel {
     content: string;
@@ -69,14 +70,22 @@ export class CommentsController {
     }
 
     getComment = async (req: Request<{ commentId: string }>, res: Response) => {
-        // Extract userId properly - ensure it comes from the JWT
-        const userId = req['user']?.id || (req as any).user?.id;
+        let userId = req['user']?.id || (req as any).user?.id;
 
-        console.log(`GetComment controller for commentId: ${req.params.commentId}, userId: ${userId}`);
-        console.log(`Request headers:`, req.headers);
+        if (!userId && req.headers.authorization) {
+            try {
+                const token = req.headers.authorization.split(' ')[1];
+                const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string };
+                userId = payload.userId;
+                console.log(`Extracted userId=${userId} directly from token`);
+            } catch (e) {
+                console.error('Error extracting userId from token:', e);
+            }
+        }
+
+        console.log(`GetComment with userId=${userId}, commentId=${req.params.commentId}`);
 
         const result = await this.getCommentUseCase.execute(req.params.commentId, userId);
-
         if (result.isFailure()) {
             return res.sendStatus(404);
         }
