@@ -8,7 +8,7 @@ import {
     commentsQueryRepository,
     deviceCommandRepository,
     deviceQueryRepository, likeStatusCommandRepository, likeStatusQueryRepository,
-    passwordRecoveryRepository,
+    passwordRecoveryRepository, postLikeStatusCommandRepository, postLikeStatusQueryRepository,
     postsCommandRepository,
     postsQueryRepository,
     tokenCommandRepository,
@@ -40,6 +40,8 @@ async function startApp() {
         deviceQueryRepository.init();
         likeStatusCommandRepository.init();
         likeStatusQueryRepository.init();
+        postLikeStatusCommandRepository.init();
+        postLikeStatusQueryRepository.init();
         app.listen(SETTINGS.PORT, () => {
             console.log(`Server started on port: ${SETTINGS.PORT}`);
         });

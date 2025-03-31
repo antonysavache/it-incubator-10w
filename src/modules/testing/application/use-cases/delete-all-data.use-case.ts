@@ -11,6 +11,9 @@ import {CommentsCommandRepository} from "../../../comments/infrastructure/reposi
 import {
     LikeStatusCommandRepository
 } from "../../../comments/infrastructure/repositories/like-status-command.repository";
+import {
+    PostLikeStatusCommandRepository
+} from "../../../posts/infrastructure/repositories/post-like-status-command.repository";
 
 export class DeleteAllDataUseCase {
     constructor(
@@ -22,6 +25,7 @@ export class DeleteAllDataUseCase {
         private passwordRecoveryRepository: PasswordRecoveryRepository,
         private commentsCommandRepository: CommentsCommandRepository,
         private likeStatusCommandRepository: LikeStatusCommandRepository,
+        private postLikeStatusCommandRepository: PostLikeStatusCommandRepository,
     ) {}
 
     async execute(): Promise<void> {
@@ -33,7 +37,9 @@ export class DeleteAllDataUseCase {
             this.deviceCommandRepository.deleteAll(),
             this.passwordRecoveryRepository.deleteAll(),
             this.commentsCommandRepository.deleteAll(),
-            this.likeStatusCommandRepository.deleteAll()
+            this.likeStatusCommandRepository.deleteAll(),
+            this.postLikeStatusCommandRepository.deleteAll(),
+
         ]);
     }
 }

@@ -21,6 +21,12 @@ import {
 import {
     LikeStatusCommandRepository
 } from "../../modules/comments/infrastructure/repositories/like-status-command.repository";
+import {
+    PostLikeStatusQueryRepository
+} from "../../modules/posts/infrastructure/repositories/post-like-status-query.repository";
+import {
+    PostLikeStatusCommandRepository
+} from "../../modules/posts/infrastructure/repositories/post-like-status-command.repository";
 
 export const blogsQueryRepository = new BlogsQueryRepository();
 export const blogsCommandRepository = new BlogsCommandRepository();
@@ -38,3 +44,5 @@ export const deviceCommandRepository = new DeviceCommandRepository();
 export const deviceQueryRepository = new DeviceQueryRepository();
 export const likeStatusCommandRepository = new LikeStatusCommandRepository();
 export const likeStatusQueryRepository = new LikeStatusQueryRepository();
+export const postLikeStatusCommandRepository = new PostLikeStatusCommandRepository();
+export const postLikeStatusQueryRepository = new PostLikeStatusQueryRepository();

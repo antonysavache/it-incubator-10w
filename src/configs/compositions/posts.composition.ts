@@ -4,8 +4,14 @@ import { GetPostByIdUseCase } from "../../modules/posts/application/use-cases/ge
 import { UpdatePostUseCase } from "../../modules/posts/application/use-cases/update-post.use-case";
 import { DeletePostUseCase } from "../../modules/posts/application/use-cases/delete-post.use-case";
 import { PostsController } from "../../modules/posts/api/posts.controller";
-import {blogsQueryRepository, postsCommandRepository, postsQueryRepository} from "./repositories";
+import { blogsQueryRepository, postsCommandRepository, postsQueryRepository } from "./repositories";
+import { UpdatePostLikeStatusUseCase } from "../../modules/posts/application/use-cases/update-post-like-status.use-case";
+import { PostLikeStatusCommandRepository } from "../../modules/posts/infrastructure/repositories/post-like-status-command.repository";
+import { PostLikeStatusQueryRepository } from "../../modules/posts/infrastructure/repositories/post-like-status-query.repository";
 
+// Create instances of new repositories
+export const postLikeStatusCommandRepository = new PostLikeStatusCommandRepository();
+export const postLikeStatusQueryRepository = new PostLikeStatusQueryRepository();
 
 // Use Cases
 export const getPostsUseCase = new GetPostsUseCase(postsQueryRepository);
@@ -13,6 +19,11 @@ export const createPostUseCase = new CreatePostUseCase(blogsQueryRepository, pos
 export const getPostByIdUseCase = new GetPostByIdUseCase(postsQueryRepository);
 export const updatePostUseCase = new UpdatePostUseCase(blogsQueryRepository, postsCommandRepository);
 export const deletePostUseCase = new DeletePostUseCase(postsCommandRepository);
+export const updatePostLikeStatusUseCase = new UpdatePostLikeStatusUseCase(
+    postsQueryRepository,
+    postLikeStatusCommandRepository,
+    postLikeStatusQueryRepository
+);
 
 // Controller
 export const postsController = new PostsController(
@@ -20,5 +31,6 @@ export const postsController = new PostsController(
     createPostUseCase,
     getPostByIdUseCase,
     updatePostUseCase,
-    deletePostUseCase
+    deletePostUseCase,
+    updatePostLikeStatusUseCase
 );

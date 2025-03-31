@@ -9,7 +9,7 @@ export class UpdateLikeStatusUseCase {
         private commentsQueryRepository: CommentsQueryRepository,
         private likeStatusCommandRepository: LikeStatusCommandRepository,
         private likeStatusQueryRepository: LikeStatusQueryRepository
-    ) {}
+    ) {}force
 
     async execute(
         commentId: string,
