@@ -51,9 +51,9 @@ export const refreshTokenUseCase = new RefreshTokenUseCase(
     tokenCommandRepository,
     tokenQueryRepository,
     deviceCommandRepository,
-    deviceQueryRepository
+    deviceQueryRepository,
+    usersQueryRepository // Pass the user query repository
 );
-
 export const logoutUseCase = new LogoutUseCase(
     tokenCommandRepository,
     tokenQueryRepository,

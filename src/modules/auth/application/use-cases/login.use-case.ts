@@ -1,12 +1,14 @@
+// src/modules/auth/application/use-cases/login.use-case.ts
 import bcrypt from 'bcrypt';
-import { UsersQueryRepository } from "../../../users/domain/infrastructures/repositories/users-query.repository";
-import { Result } from "../../../../shared/infrastructures/result";
-import { TokenCommandRepository } from "../../infrastructure/repositories/token-command.repository";
-import { LoginDTO } from "../interfaces/auth.interface";
-import { TOKEN_SETTINGS } from "../../domain/interfaces/token.interface";
-import { JwtService } from "../../../../shared/services/jwt.service";
 import { v4 as uuidv4 } from 'uuid';
-import { DeviceCommandRepository } from "../../infrastructure/repositories/device-command.repository";
+// ... other imports ...
+import { JwtService } from "../../../../shared/services/jwt.service"; // Ensure correct path
+import { TOKEN_SETTINGS } from "../../domain/interfaces/token.interface";
+import {UsersQueryRepository} from "../../../users/domain/infrastructures/repositories/users-query.repository";
+import {TokenCommandRepository} from "../../infrastructure/repositories/token-command.repository";
+import {DeviceCommandRepository} from "../../infrastructure/repositories/device-command.repository";
+import {LoginDTO} from "../interfaces/auth.interface";
+import {Result} from "../../../../shared/infrastructures/result"; // Ensure correct path
 
 export class LoginUseCase {
     constructor(
@@ -36,22 +38,27 @@ export class LoginUseCase {
 
         const deviceId = uuidv4();
         const deviceTitle = userAgent || 'Unknown Device';
-
         const now = new Date();
-        const accessTokenExpiry = new Date(now.getTime() + 1000 * 1000);
-        const refreshTokenExpiry = new Date(now.getTime() + 20000 * 1000);
+        // Using shorter expiry for testing as per your previous code
+        const refreshTokenExpiry = new Date(now.getTime() + 20000 * 1000); // 20 seconds
 
+        // Pass user.login to JwtService
         const accessToken = JwtService.createJWT(
             user._id.toString(),
-            TOKEN_SETTINGS.ACCESS_TOKEN_EXPIRATION
+            TOKEN_SETTINGS.ACCESS_TOKEN_EXPIRATION, // Use configured expiration
+            undefined, // No deviceId in access token
+            user.login // Pass the actual login
         );
 
         const refreshToken = JwtService.createJWT(
             user._id.toString(),
-            TOKEN_SETTINGS.REFRESH_TOKEN_EXPIRATION,
-            deviceId
+            TOKEN_SETTINGS.REFRESH_TOKEN_EXPIRATION, // Use configured expiration
+            deviceId,
+            user.login // Pass the actual login
         );
 
+        // Save tokens (assuming this repo handles expiry correctly based on JWT)
+        // Consider if token repo needs expiry passed explicitly or reads from token
         await this.tokenCommandRepository.saveTokens(
             user._id.toString(),
             accessToken,
@@ -65,7 +72,7 @@ export class LoginUseCase {
             ip,
             title: deviceTitle,
             lastActiveDate: now,
-            expiresAt: refreshTokenExpiry,
+            expiresAt: refreshTokenExpiry, // Match refresh token expiry
             isActive: true
         });
 
