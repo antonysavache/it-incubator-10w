@@ -1,3 +1,4 @@
+// src/modules/blogs/application/use-cases/get-blog-posts.use-case.ts
 import {BlogsQueryRepository} from "../../infrastructure/repositories/blogs-query.repository";
 import {DEFAULT_QUERY_PARAMS, PageResponse, QueryParams} from "../../../../shared/models/common.model";
 import {Result} from "../../../../shared/infrastructures/result";
@@ -10,13 +11,15 @@ export class GetBlogPostsUseCase {
         private postsQueryRepository: PostsQueryRepository
     ) {}
 
-    async execute(blogId: string, params: QueryParams): Promise<Result<PageResponse<PostViewModel>>> {
+    // **** ADD OPTIONAL userId PARAMETER ****
+    async execute(blogId: string, params: QueryParams, userId?: string): Promise<Result<PageResponse<PostViewModel>>> {
         const blog = await this.blogsQueryRepository.findById(blogId);
 
         if (!blog) {
             return Result.fail('Blog not found');
         }
 
+        // **** PASS userId TO findAll ****
         const posts = await this.postsQueryRepository.findAll({
             searchParams: [],
             sortBy: params.sortBy || DEFAULT_QUERY_PARAMS.sortBy,
@@ -24,7 +27,7 @@ export class GetBlogPostsUseCase {
             pageNumber: params.pageNumber || DEFAULT_QUERY_PARAMS.pageNumber,
             pageSize: params.pageSize || DEFAULT_QUERY_PARAMS.pageSize,
             blogId
-        });
+        }, userId); // Pass userId here
 
         return Result.ok(posts);
     }

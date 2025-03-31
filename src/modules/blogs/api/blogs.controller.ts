@@ -9,6 +9,10 @@ import { GetBlogPostsUseCase } from '../application/use-cases/get-blog-posts.use
 import { QueryParams } from '../../../shared/models/common.model';
 import { BlogCreateDTO } from '../domain/interfaces/blog.interface';
 import { PostCreateDTO } from '../../posts/domain/interfaces/post.interface';
+import {SETTINGS} from "../../../configs/settings";
+import {JwtPayload} from "../../../shared/services/jwt.service";
+import jwt from 'jsonwebtoken';
+
 
 export class BlogsController {
     constructor(
@@ -58,9 +62,37 @@ export class BlogsController {
     }
 
     getBlogPosts = async (req: Request<{ id: string }, {}, {}, QueryParams>, res: Response) => {
-        const result = await this.getBlogPostsUseCase.execute(req.params.id, req.query);
+        let userId: string | undefined = undefined;
 
-        result.isFailure() ? res.sendStatus(404) : res.status(200).json(result.getValue());
+        // **** START: ADD userId EXTRACTION LOGIC ****
+        const authHeader = req.headers.authorization;
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.split(' ')[1];
+            try {
+                // Use your JwtService if it handles verification errors appropriately
+                // Or use jwt.verify directly
+                const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as JwtPayload;
+                if (payload && payload.userId) {
+                    userId = payload.userId;
+                    console.log(`[getBlogPosts] Extracted userId=${userId} from token.`);
+                }
+            } catch (e) {
+                console.log('[getBlogPosts] Token verification failed or token invalid/expired.');
+                // Don't fail the request, just proceed without userId for anonymous view
+            }
+        } else {
+            console.log('[getBlogPosts] No authorization token found.');
+        }
+        // **** END: ADD userId EXTRACTION LOGIC ****
+
+        // **** Pass the extracted userId (or undefined) to the use case ****
+        const result = await this.getBlogPostsUseCase.execute(req.params.id, req.query, userId);
+
+        if (result.isFailure()) {
+            res.sendStatus(404); // Blog not found
+        } else {
+            res.status(200).json(result.getValue());
+        }
     }
 
     createBlogPost = async (req: Request<{ id: string }, {}, PostCreateDTO>, res: Response) => {
