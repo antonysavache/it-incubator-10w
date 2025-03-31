@@ -1,8 +1,10 @@
+// src/modules/posts/application/use-cases/update-post-like-status.use-case.ts
+
 import { Result } from "../../../../shared/infrastructures/result";
 import { PostsQueryRepository } from "../../infrastructure/repositories/posts-query.repository";
 import { PostLikeStatusCommandRepository } from "../../infrastructure/repositories/post-like-status-command.repository";
 import { PostLikeStatusQueryRepository } from "../../infrastructure/repositories/post-like-status-query.repository";
-import {LikeStatusEnum, LikeStatusUpdateDTO} from "../../../comments/domain/interfaces/like-status.interface";
+import { LikeStatusEnum, LikeStatusUpdateDTO } from "../../../comments/domain/interfaces/like-status.interface";
 
 export class UpdatePostLikeStatusUseCase {
     constructor(
@@ -14,23 +16,25 @@ export class UpdatePostLikeStatusUseCase {
     async execute(
         postId: string,
         userId: string,
-        userLogin: string,
+        userLogin: string, // Added userLogin
         dto: LikeStatusUpdateDTO
     ): Promise<Result<void>> {
         try {
-            console.log(`[DEBUG] Updating like status for postId=<span class="math-inline">\{postId\}, userId\=</span>{userId}, status=${dto.likeStatus}`);
+            console.log(`[UpdatePostLikeStatusUseCase] Start: postId=${postId}, userId=${userId}, userLogin=${userLogin}, status=${dto.likeStatus}`);
 
-            // Check if post exists
+            // 1. Check if post exists
             const post = await this.postsQueryRepository.findById(postId);
             if (!post) {
-                console.log(`[DEBUG] Post not found: ${postId}`);
-                return Result.fail('Post not found');
+                console.log(`[UpdatePostLikeStatusUseCase] Post not found: ${postId}`);
+                return Result.fail('Post not found'); // Return 404 in controller
             }
+            console.log(`[UpdatePostLikeStatusUseCase] Post found: ${postId}`);
 
-            // Validate status value
+            // 2. Validate status value
             const validStatuses: LikeStatusEnum[] = ['None', 'Like', 'Dislike'];
             if (!dto.likeStatus || !validStatuses.includes(dto.likeStatus as LikeStatusEnum)) {
-                console.log(`[DEBUG] Invalid likeStatus: ${dto.likeStatus}`);
+                console.log(`[UpdatePostLikeStatusUseCase] Invalid likeStatus provided: ${dto.likeStatus}`);
+                // Return 400 in controller with validation error
                 return Result.fail({
                     errorsMessages: [{
                         message: "Invalid like status. Should be 'None', 'Like', or 'Dislike'",
@@ -38,49 +42,45 @@ export class UpdatePostLikeStatusUseCase {
                     }]
                 });
             }
+            console.log(`[UpdatePostLikeStatusUseCase] Like status validation passed: ${dto.likeStatus}`);
 
-            // Get current status
-            const currentStatus = await this.postLikeStatusQueryRepository.getUserStatus(postId, userId);
-            console.log(`[DEBUG] Current status: ${currentStatus}, new status: ${dto.likeStatus}`);
-
-            // If no change, return success
-            if (currentStatus === dto.likeStatus) {
-                console.log(`[DEBUG] Status unchanged, returning success`);
-                return Result.ok();
-            }
-
-            // Update status
-            console.log(`[DEBUG] Attempting to update status in database`);
+            // 3. Attempt to update status in database (includes check for existing status)
+            console.log(`[UpdatePostLikeStatusUseCase] Calling repository to update/create status...`);
             const updated = await this.postLikeStatusCommandRepository.findAndUpdateStatus(
                 userId,
                 postId,
-                userLogin,
+                userLogin, // Pass userLogin here
                 dto.likeStatus as LikeStatusEnum
             );
 
+            // 4. Handle repository result
             if (!updated) {
-                console.log(`[DEBUG] Failed to update like status in database`);
+                // This usually means a database error occurred, logged in the repo
+                console.error(`[UpdatePostLikeStatusUseCase] Repository failed to update like status for postId=${postId}, userId=${userId}`);
+                // Return 400 in controller, as it's an internal processing error, not a validation one
                 return Result.fail({
                     errorsMessages: [{
-                        message: "Error processing like status update",
-                        field: "likeStatus"
+                        message: "Error processing like status update", // Keep generic for client
+                        field: "likeStatus" // Or maybe 'none' if it's a general DB issue
                     }]
-                });  // Changed this line
+                });
             }
 
-            console.log(`[DEBUG] Successfully updated like status`);
-            return Result.ok();
+            console.log(`[UpdatePostLikeStatusUseCase] Successfully processed like status update for postId=${postId}, userId=${userId}`);
+            return Result.ok(); // Return 204 in controller
 
         } catch (error) {
-            console.error(`[DEBUG] Exception in update like status: ${error}`);
-            console.error(error.stack); // VERY IMPORTANT: Log the stack trace!
+            // Catch unexpected errors
+            console.error(`[UpdatePostLikeStatusUseCase] Unexpected exception: postId=${postId}, userId=${userId}`, error);
+            console.error(error.stack); // Log stack trace
 
+            // Return 400 or 500 - 400 might align better with the current test expectation
             return Result.fail({
                 errorsMessages: [{
-                    message: "Error processing like status update",
-                    field: "likeStatus"
+                    message: "An unexpected error occurred while processing the like status.", // Keep generic
+                    field: "none" // Indicate general failure
                 }]
-            }); // Changed this line
+            });
         }
     }
 }
