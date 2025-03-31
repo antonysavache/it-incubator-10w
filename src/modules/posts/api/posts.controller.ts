@@ -84,12 +84,20 @@ export class PostsController {
     }
 
     updateLikeStatus = async (req: RequestWithUser<{ postId: string }, LikeStatusUpdateDTO>, res: Response) => {
+        console.log(`UpdateLikeStatus: postId=${req.params.postId}, userId=${req.user.id}, likeStatus=${req.body.likeStatus}`);
+
         const result = await this.updatePostLikeStatusUseCase.execute(
             req.params.postId,
             req.user.id,
             req.user.login,
             req.body
         );
+
+        if (result.isFailure()) {
+            console.log(`Error updating post like status:`, result.getError());
+        } else {
+            console.log(`Post like status updated successfully`);
+        }
 
         if (result.isFailure()) {
             const error = result.getError();

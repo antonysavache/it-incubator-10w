@@ -23,7 +23,7 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
         return {
             id: _id.toString(),
             ...rest,
-            extendedLikesInfo: {
+            extendedLikesInfo: rest.extendedLikesInfo || {
                 likesCount: 0,
                 dislikesCount: 0,
                 myStatus: 'None',
@@ -49,8 +49,18 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
     async findById(id: string, userId?: string): Promise<PostViewModel | null> {
         this.checkInit();
         try {
+            console.log(`Finding post by id=${id}, userId=${userId || 'none'}`);
             const post = await this.collection.findOne({ _id: new ObjectId(id) });
-            return post ? await this.toViewModelWithLikes(post, userId) : null;
+
+            if (!post) {
+                console.log(`Post with id=${id} not found`);
+                return null;
+            }
+
+            console.log(`Post found, getting likes info`);
+            const result = await this.toViewModelWithLikes(post, userId);
+            console.log(`Post likes info loaded, returning post`);
+            return result;
         } catch (e) {
             console.error('Error finding post by id:', e);
             return null;
@@ -78,6 +88,7 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
         ]);
 
         // Convert each post to view model with likes info
+        console.log(`Found ${items.length} posts, loading likes info for userId=${userId || 'none'}`);
         const postsWithLikes = await Promise.all(
             items.map(item => this.toViewModelWithLikes(item, userId))
         );

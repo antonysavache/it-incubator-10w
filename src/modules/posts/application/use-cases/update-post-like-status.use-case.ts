@@ -17,6 +17,8 @@ export class UpdatePostLikeStatusUseCase {
         userLogin: string,
         dto: LikeStatusUpdateDTO
     ): Promise<Result<void>> {
+        console.log(`Executing post like status update: postId=${postId}, userId=${userId}, userLogin=${userLogin}, status=${dto.likeStatus}`);
+
         const validStatuses: LikeStatusEnum[] = ['None', 'Like', 'Dislike'];
         if (!validStatuses.includes(dto.likeStatus as LikeStatusEnum)) {
             return Result.fail({
@@ -33,9 +35,11 @@ export class UpdatePostLikeStatusUseCase {
         }
 
         const currentStatus = await this.postLikeStatusQueryRepository.getUserStatus(postId, userId);
+        console.log(`Current like status for userId=${userId} is ${currentStatus}`);
 
         if (currentStatus === dto.likeStatus) {
             // No need to update if status hasn't changed
+            console.log(`Status unchanged, skipping update: ${currentStatus}`);
             return Result.ok();
         }
 
@@ -47,9 +51,11 @@ export class UpdatePostLikeStatusUseCase {
         );
 
         if (!updated) {
+            console.error(`Failed to update post like status`);
             return Result.fail('Failed to update like status');
         }
 
+        console.log(`Successfully updated post like status to ${dto.likeStatus}`);
         return Result.ok();
     }
 }

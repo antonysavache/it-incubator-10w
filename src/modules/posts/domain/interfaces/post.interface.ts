@@ -30,7 +30,12 @@ export interface PostDatabaseModel {
     blogId: string;
     blogName: string;
     createdAt: string;
-    extendedLikesInfo: any;
+    extendedLikesInfo: {
+        likesCount: number;
+        dislikesCount: number;
+        myStatus: LikeStatusEnum;
+        newestLikes: NewestLike[];
+    };
 }
 
 export interface PostViewModel {

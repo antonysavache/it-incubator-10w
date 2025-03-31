@@ -14,9 +14,13 @@ export class PostLikeStatusCommandRepository extends BaseCommandRepository<PostL
         const now = new Date().toISOString();
 
         try {
+            console.log(`Finding/updating post like status for userId=${userId}, postId=${postId}, status=${status}`);
+
             const existingStatus = await this.collection.findOne({ userId, postId });
 
             if (existingStatus) {
+                console.log(`Found existing status: ${existingStatus.status}, updating to: ${status}`);
+
                 const result = await this.collection.updateOne(
                     { userId, postId },
                     {
@@ -28,6 +32,8 @@ export class PostLikeStatusCommandRepository extends BaseCommandRepository<PostL
                 );
                 return result.modifiedCount > 0;
             } else {
+                console.log(`No existing status found, creating new with status: ${status}`);
+
                 await this.create({
                     userId,
                     userLogin,

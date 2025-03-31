@@ -17,7 +17,12 @@ export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunctio
     }
 
     try {
-        const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string, login: string };
+        const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as { userId: string, login?: string };
+
+        if (!payload || !payload.userId) {
+            console.error('JWT payload invalid:', payload);
+            return res.sendStatus(401);
+        }
 
         // Set user info directly on req.user AND extend the Request object
         req['user'] = {
