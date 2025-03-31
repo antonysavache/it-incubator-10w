@@ -152,18 +152,20 @@ export class PostsController {
 
             if (result.isFailure()) {
                 const error = result.getError();
-                console.log(`Error updating like status:`, error);
+                console.log(`Error updating like status:`, error); // Check this log if possible
 
-                if (error === 'Post not found') {
+                if (error === 'Post not found') { // Error is NOT this string
                     return res.sendStatus(404);
                 }
 
+                // Error IS likely NOT this object format based on previous results
                 if (typeof error === 'object' && 'errorsMessages' in error) {
                     return res.status(400).json(error);
                 }
 
+                // *** THIS PART MATCHES THE CURRENT ERROR OUTPUT ***
                 return res.status(400).json({
-                    errorsMessages: [{ message: error as string, field: 'likeStatus' }]
+                    errorsMessages: [{ message: error as string, field: 'likeStatus' }] // <--- This structure!
                 });
             }
 
