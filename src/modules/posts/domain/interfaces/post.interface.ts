@@ -30,6 +30,7 @@ export interface PostDatabaseModel {
     blogId: string;
     blogName: string;
     createdAt: string;
+    extendedLikesInfo: any;
 }
 
 export interface PostViewModel {

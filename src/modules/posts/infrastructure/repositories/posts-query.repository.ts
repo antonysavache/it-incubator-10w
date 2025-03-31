@@ -1,7 +1,7 @@
 import { PostDatabaseModel, PostViewModel } from "../../domain/interfaces/post.interface";
 import { BaseQueryRepository } from "../../../../shared/infrastructures/repositories/base-query.repository";
 import { WithId, ObjectId } from "mongodb";
-import { PageResponse } from "../../../../shared/models/common.model";
+import { ToViewModel } from "../../../../shared/models/common.model";
 import { PostLikeStatusQueryRepository } from "./post-like-status-query.repository";
 
 export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel> {
@@ -17,17 +17,31 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
         this.postLikeStatusQueryRepository.init();
     }
 
-    protected async toViewModel(model: WithId<PostDatabaseModel>, userId?: string): Promise<PostViewModel> {
-        const likesInfo = await this.postLikeStatusQueryRepository.getLikesInfo(model._id.toString(), userId);
+    // Override the toViewModel method in BaseQueryRepository
+    protected override toViewModel(model: WithId<PostDatabaseModel>): ToViewModel<PostDatabaseModel> {
+        const { _id, ...rest } = model;
+        return {
+            id: _id.toString(),
+            ...rest,
+            extendedLikesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None',
+                newestLikes: []
+            }
+        };
+    }
+
+    // Add a new method for converting with likes info
+    protected async toViewModelWithLikes(model: WithId<PostDatabaseModel>, userId?: string): Promise<PostViewModel> {
+        const { _id, ...rest } = model;
+
+        // Get likes info for the post
+        const likesInfo = await this.postLikeStatusQueryRepository.getLikesInfo(_id.toString(), userId);
 
         return {
-            id: model._id.toString(),
-            title: model.title,
-            shortDescription: model.shortDescription,
-            content: model.content,
-            blogId: model.blogId,
-            blogName: model.blogName,
-            createdAt: model.createdAt,
+            id: _id.toString(),
+            ...rest,
             extendedLikesInfo: likesInfo
         };
     }
@@ -36,15 +50,14 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
         this.checkInit();
         try {
             const post = await this.collection.findOne({ _id: new ObjectId(id) });
-            return post ? await this.toViewModel(post, userId) : null;
+            return post ? await this.toViewModelWithLikes(post, userId) : null;
         } catch (e) {
             console.error('Error finding post by id:', e);
             return null;
         }
     }
 
-    // Override findAll to include userId for like status
-    async findAll(params: any, userId?: string): Promise<PageResponse<PostViewModel>> {
+    async findAll(params: any, userId?: string): Promise<any> {
         this.checkInit();
 
         const filter = this.buildFilter(params.searchParams, params.blogId ? { blogId: params.blogId } : {});
@@ -66,7 +79,7 @@ export class PostsQueryRepository extends BaseQueryRepository<PostDatabaseModel>
 
         // Convert each post to view model with likes info
         const postsWithLikes = await Promise.all(
-            items.map(item => this.toViewModel(item, userId))
+            items.map(item => this.toViewModelWithLikes(item, userId))
         );
 
         return {

@@ -5,7 +5,7 @@ import {
 import {
     blogsCommandRepository, commentsCommandRepository,
     deviceCommandRepository, likeStatusCommandRepository,
-    passwordRecoveryRepository,
+    passwordRecoveryRepository, postLikeStatusCommandRepository,
     postsCommandRepository,
     tokenCommandRepository,
     usersCommandRepository
@@ -19,7 +19,8 @@ export const deleteAllDataUseCase = new DeleteAllDataUseCase(
     deviceCommandRepository,
     passwordRecoveryRepository,
     commentsCommandRepository,
-    likeStatusCommandRepository
+    likeStatusCommandRepository,
+    postLikeStatusCommandRepository
 );
 
 export const testingController = new TestingController(

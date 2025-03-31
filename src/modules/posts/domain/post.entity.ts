@@ -34,7 +34,13 @@ export class PostEntity {
             content: this.content,
             blogId: this.blogId,
             blogName: this.blogName,
-            createdAt: this.createdAt
+            createdAt: this.createdAt,
+            extendedLikesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None',
+                newestLikes: []
+            }
         };
     }
 
@@ -46,7 +52,13 @@ export class PostEntity {
             content: this.content,
             blogId: this.blogId,
             blogName: this.blogName,
-            createdAt: this.createdAt
+            createdAt: this.createdAt,
+            extendedLikesInfo: {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None',
+                newestLikes: []
+            }
         };
     }
 }
