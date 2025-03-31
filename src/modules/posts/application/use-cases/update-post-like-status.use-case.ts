@@ -15,21 +15,25 @@ export class UpdatePostLikeStatusUseCase {
     async execute(
         postId: string,
         userId: string,
-        userLogin: string,
+        userLogin: string | undefined | null, // Accept potentially undefined/null
         dto: LikeStatusUpdateDTO
     ): Promise<Result<void>> {
         try {
-            console.log(`[UpdatePostLikeStatusUseCase] Start: postId=${postId}, userId=${userId}, userLogin=${userLogin}, status=${dto.likeStatus}`);
+            // *** MODIFIED: More robust fallback for userLogin ***
+            const actualUserLogin = (userLogin && userLogin.trim() !== '') ? userLogin : `user_${userId.substring(0, 4)}`;
+            // If login is empty, null, or undefined, create a fallback like "user_abcd"
 
-            // 1. Check if post exists (returns Result.fail('Post not found'))
+            console.log(`[UpdatePostLikeStatusUseCase] Start: postId=${postId}, userId=${userId}, userLogin='${actualUserLogin}', status=${dto.likeStatus}`);
+
+            // 1. Check if post exists
             const post = await this.postsQueryRepository.findById(postId);
             if (!post) {
                 console.log(`[UpdatePostLikeStatusUseCase] Post not found: ${postId}`);
-                return Result.fail('Post not found'); // Controller handles this -> 404
+                return Result.fail('Post not found');
             }
             console.log(`[UpdatePostLikeStatusUseCase] Post found: ${postId}`);
 
-            // 2. Validate status value (returns Result.fail({ errorsMessages: [...] }))
+            // 2. Validate status value
             const validStatuses: LikeStatusEnum[] = ['None', 'Like', 'Dislike'];
             if (!dto.likeStatus || !validStatuses.includes(dto.likeStatus as LikeStatusEnum)) {
                 console.log(`[UpdatePostLikeStatusUseCase] Invalid likeStatus provided: ${dto.likeStatus}`);
@@ -38,46 +42,42 @@ export class UpdatePostLikeStatusUseCase {
                         message: "Invalid like status. Should be 'None', 'Like', or 'Dislike'",
                         field: "likeStatus"
                     }]
-                }); // Controller handles this -> 400
+                });
             }
             console.log(`[UpdatePostLikeStatusUseCase] Like status validation passed: ${dto.likeStatus}`);
 
             // 3. Attempt to update status in database
-            console.log(`[UpdatePostLikeStatusUseCase] Calling repository to update/create status...`);
+            console.log(`[UpdatePostLikeStatusUseCase] Calling repository with userLogin='${actualUserLogin}'...`);
             const updated = await this.postLikeStatusCommandRepository.findAndUpdateStatus(
                 userId,
                 postId,
-                userLogin,
+                actualUserLogin, // Use the guaranteed non-empty login
                 dto.likeStatus as LikeStatusEnum
             );
 
             // 4. Handle repository result
             if (!updated) {
-                // Repository returned false, indicating an internal error (logged there)
-                console.error(`[UpdatePostLikeStatusUseCase] Repository returned false for postId=${postId}, userId=${userId}. Assuming DB error.`);
-                // *** ENSURE THIS RETURNS THE EXPECTED OBJECT FORMAT ***
+                console.error(`[UpdatePostLikeStatusUseCase] Repository returned false for postId=${postId}, userId=${userId}.`);
                 return Result.fail({
                     errorsMessages: [{
-                        message: "Error processing like status update", // Revert to original message if tests expect it
-                        field: "likeStatus" // Revert to original field
+                        message: "Error processing like status update",
+                        field: "likeStatus"
                     }]
-                }); // Controller should handle this -> 400
+                });
             }
 
             console.log(`[UpdatePostLikeStatusUseCase] Successfully processed like status update for postId=${postId}, userId=${userId}`);
-            return Result.ok(); // Return 204 in controller
+            return Result.ok();
 
         } catch (error) {
             console.error(`[UpdatePostLikeStatusUseCase] Unexpected exception: postId=${postId}, userId=${userId}`, error);
             console.error(error.stack);
-
-            // *** ENSURE THIS RETURNS THE EXPECTED OBJECT FORMAT ***
             return Result.fail({
                 errorsMessages: [{
-                    message: "An unexpected error occurred", // Simpler message
-                    field: "exception" // Keep field distinct if possible
+                    message: "An unexpected error occurred",
+                    field: "exception"
                 }]
-            }); // Controller should handle this -> 400
+            });
         }
     }
 }
