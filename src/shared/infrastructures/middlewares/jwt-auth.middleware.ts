@@ -16,28 +16,28 @@ export const jwtAuthMiddleware = (req: Request, res: Response, next: NextFunctio
             return res.sendStatus(401);
         }
 
-        let payload: any;
         try {
-            payload = jwt.verify(token, SETTINGS.JWT_SECRET);
+            const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as any;
+
+            if (!payload || !payload.userId) {
+                console.error('Invalid token payload:', payload);
+                return res.sendStatus(401);
+            }
+
+            // Make sure user has both id and login
+            req.user = {
+                id: payload.userId,
+                login: payload.login || payload.userId // Fallback to userId if login is missing
+            };
+
+            console.log(`JWT auth set user: ${req.user.id} (${req.user.login})`);
+            return next();
         } catch (err) {
             console.error('JWT verification failed:', err);
             return res.sendStatus(401);
         }
-
-        if (!payload || typeof payload !== 'object' || !payload.userId) {
-            console.error('Invalid JWT payload structure:', payload);
-            return res.sendStatus(401);
-        }
-
-        // Ensure user object has all required properties with defaults if missing
-        req['user'] = {
-            id: payload.userId,
-            login: payload.login || 'unknown'
-        };
-
-        return next();
     } catch (error) {
         console.error('Unexpected error in JWT middleware:', error);
         return res.sendStatus(500);
     }
-}
+};

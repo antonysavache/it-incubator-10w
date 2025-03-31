@@ -25,7 +25,7 @@ export class SecurityDevicesController {
     }
 
     deleteDevice = async (req: RequestWithUser<{ deviceId: string }>, res: Response) => {
-        const { deviceId } = req.params;
+        const { deviceId } = req['params'];
 
         const result = await this.deleteDeviceUseCase.execute(deviceId, req.user.id);
 

@@ -69,8 +69,8 @@ export class CommentsController {
 
     createComment = async (req: RequestWithUser<{ postId: string }, CommentBodyModel>, res: Response) => {
         const result = await this.createCommentUseCase.execute(
-            req.params.postId,
-            req.body.content,
+            req['params'].postId,
+            req['body'].content,
             req.user.id,
             req.user.login
         );
@@ -117,9 +117,9 @@ export class CommentsController {
 
     updateComment = async (req: RequestWithUser<{ commentId: string }, CommentBodyModel>, res: Response) => {
         const result = await this.updateCommentUseCase.execute(
-            req.params.commentId,
+            req['params'].commentId,
             req.user.id,
-            req.body.content
+            req['body'].content
         );
 
         if (result.isFailure()) {
@@ -143,7 +143,7 @@ export class CommentsController {
 
     deleteComment = async (req: RequestWithUser<{ commentId: string }>, res: Response) => {
         const result = await this.deleteCommentUseCase.execute(
-            req.params.commentId,
+            req['params'].commentId,
             req.user.id
         );
 
@@ -162,12 +162,12 @@ export class CommentsController {
     }
 
     updateLikeStatus = async (req: RequestWithUser<{ commentId: string }, LikeStatusUpdateDTO>, res: Response) => {
-        console.log(`UpdateLikeStatus: commentId=${req.params.commentId}, userId=${req.user.id}, likeStatus=${req.body.likeStatus}`);
+        console.log(`UpdateLikeStatus: commentId=${req['params'].commentId}, userId=${req.user.id}, likeStatus=${req['body'].likeStatus}`);
 
         const result = await this.updateLikeStatusUseCase.execute(
-            req.params.commentId,
+            req['params'].commentId,
             req.user.id,
-            req.body
+            req['body']
         );
 
         if (result.isFailure()) {

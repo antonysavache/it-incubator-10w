@@ -4,7 +4,7 @@ import { tokenQueryRepository } from "../../../configs/compositions/repositories
 import { RequestWithUser } from "../../types/express";
 
 export const refreshTokenMiddleware = async (req: RequestWithUser, res: Response, next: NextFunction) => {
-    const refreshToken = req.cookies.refreshToken;
+    const refreshToken = req['cookies'].refreshToken;
 
     if (!refreshToken) {
         return res.sendStatus(401);

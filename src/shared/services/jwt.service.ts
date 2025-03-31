@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
-import { SETTINGS } from "../../configs/settings";
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
+import {SETTINGS} from "../../configs/settings";
 
 export interface JwtPayload {
     userId: string;
@@ -10,12 +10,10 @@ export interface JwtPayload {
 
 export class JwtService {
     static createJWT(userId: string, expiresIn: string, deviceId?: string): string {
-        // Get user login from database if needed in a real implementation
-        // For now, we ensure we send the userId consistently
         return jwt.sign(
             {
                 userId,
-                login: userId, // You might want to get the actual login from DB
+                login: userId, // Use userId as login for simplicity
                 deviceId: deviceId || uuidv4()
             },
             SETTINGS.JWT_SECRET,

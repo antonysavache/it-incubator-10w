@@ -119,26 +119,40 @@ export class PostsController {
 
     updateLikeStatus = async (req: Request<{ postId: string }, {}, LikeStatusUpdateDTO>, res: Response) => {
         try {
-            // Safely access user properties with fallbacks
-            const userId = req['user']?.id || '';
-            const userLogin = req['user']?.login || 'unknown';
+            console.log(`Update like status request for postId=${req.params.postId}, body=`, req.body);
 
-            console.log(`Updating like status for postId=${req.params.postId}, userId=${userId}, status=${req.body.likeStatus}`);
+            // Extract user info from JWT token if not provided by middleware
+            let userId = req.user?.id;
+            let userLogin = req.user?.login;
+
+            if (!userId && req.headers.authorization) {
+                try {
+                    const token = req.headers.authorization.split(' ')[1];
+                    const payload = jwt.verify(token, SETTINGS.JWT_SECRET) as any;
+                    userId = payload.userId;
+                    userLogin = payload.login || 'unknown';
+                    console.log(`Extracted user from token: userId=${userId}, login=${userLogin}`);
+                } catch (err) {
+                    console.error('Failed to extract user from token:', err);
+                    return res.sendStatus(401);
+                }
+            }
 
             if (!userId) {
-                console.error('Missing userId in request');
+                console.error('Missing userId for like status update');
                 return res.sendStatus(401);
             }
 
             const result = await this.updatePostLikeStatusUseCase.execute(
                 req.params.postId,
                 userId,
-                userLogin,
+                userLogin || 'unknown',
                 req.body
             );
 
             if (result.isFailure()) {
                 const error = result.getError();
+                console.log(`Error updating like status:`, error);
 
                 if (error === 'Post not found') {
                     return res.sendStatus(404);

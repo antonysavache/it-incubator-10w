@@ -38,4 +38,5 @@ authRouter.post('/new-password',
 
 authRouter.post('/refresh-token', authController.refreshToken);
 authRouter.post('/logout', authController.logout);
+// @ts-ignore
 authRouter.get('/me', jwtAuthMiddleware, authController.getMe);

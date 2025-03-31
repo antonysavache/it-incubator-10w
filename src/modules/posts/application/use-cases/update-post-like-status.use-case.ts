@@ -1,9 +1,8 @@
-// src/modules/posts/application/use-cases/update-post-like-status.use-case.ts
 import { Result } from "../../../../shared/infrastructures/result";
 import { PostsQueryRepository } from "../../infrastructure/repositories/posts-query.repository";
 import { PostLikeStatusCommandRepository } from "../../infrastructure/repositories/post-like-status-command.repository";
 import { PostLikeStatusQueryRepository } from "../../infrastructure/repositories/post-like-status-query.repository";
-import { LikeStatusEnum, LikeStatusUpdateDTO } from "../../../comments/domain/interfaces/like-status.interface";
+import {LikeStatusEnum, LikeStatusUpdateDTO} from "../../../comments/domain/interfaces/like-status.interface";
 
 export class UpdatePostLikeStatusUseCase {
     constructor(
@@ -19,18 +18,18 @@ export class UpdatePostLikeStatusUseCase {
         dto: LikeStatusUpdateDTO
     ): Promise<Result<void>> {
         try {
-            console.log(`UpdatePostLikeStatusUseCase executing with postId=${postId}, userId=${userId}, userLogin=${userLogin}, status=${dto.likeStatus}`);
+            console.log(`Execute post like status for postId=${postId}, userId=${userId}, status=${dto.likeStatus}`);
 
-            // Guard conditions
-            if (!postId || !userId) {
-                console.error('Missing required params: postId or userId');
-                return Result.fail('Missing required parameters');
+            // Check if post exists
+            const post = await this.postsQueryRepository.findById(postId);
+            if (!post) {
+                console.log(`Post not found: ${postId}`);
+                return Result.fail('Post not found');
             }
 
-            // Validate like status
+            // Validate status value
             const validStatuses: LikeStatusEnum[] = ['None', 'Like', 'Dislike'];
             if (!dto.likeStatus || !validStatuses.includes(dto.likeStatus as LikeStatusEnum)) {
-                console.error(`Invalid like status: ${dto.likeStatus}`);
                 return Result.fail({
                     errorsMessages: [{
                         message: "Invalid like status. Should be 'None', 'Like', or 'Dislike'",
@@ -39,41 +38,33 @@ export class UpdatePostLikeStatusUseCase {
                 });
             }
 
-            // Check if post exists
-            const post = await this.postsQueryRepository.findById(postId);
-            if (!post) {
-                console.error(`Post with id=${postId} not found`);
-                return Result.fail('Post not found');
-            }
-
-            // Get current like status
+            // Get current status
             const currentStatus = await this.postLikeStatusQueryRepository.getUserStatus(postId, userId);
-            console.log(`Current like status: ${currentStatus}`);
+            console.log(`Current status: ${currentStatus}, new status: ${dto.likeStatus}`);
 
-            // Skip update if status hasn't changed
+            // If no change, return success
             if (currentStatus === dto.likeStatus) {
-                console.log(`Status unchanged, skipping update`);
                 return Result.ok();
             }
 
-            // Update the like status
+            // Update status
             const updated = await this.postLikeStatusCommandRepository.findAndUpdateStatus(
                 userId,
                 postId,
-                userLogin || 'unknown',
+                userLogin,
                 dto.likeStatus as LikeStatusEnum
             );
 
             if (!updated) {
-                console.error('Failed to update like status');
+                console.log(`Failed to update like status`);
                 return Result.fail('Failed to update like status');
             }
 
-            console.log(`Like status updated successfully to ${dto.likeStatus}`);
+            console.log(`Successfully updated like status`);
             return Result.ok();
         } catch (error) {
-            console.error('Error in UpdatePostLikeStatusUseCase:', error);
-            return Result.fail('An unexpected error occurred');
+            console.error(`Exception in update like status: ${error}`);
+            return Result.fail('Error processing like status update');
         }
     }
 }
