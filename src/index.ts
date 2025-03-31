@@ -37,7 +37,6 @@ async function startApp() {
         postsCommandRepository.init();
 
         // Post like status repositories
-        postLikeStatusCommandRepository.init();
         postLikeStatusQueryRepository.init();
         console.log('Post like repositories initialized');
 
