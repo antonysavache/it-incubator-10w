@@ -30,7 +30,6 @@ postsRouter.delete('/:id',
     postsController.deletePost
 );
 
-// Add new like status endpoint
 postsRouter.put('/:postId/like-status',
     jwtAuthMiddleware,
     postLikeStatusValidation,

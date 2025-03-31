@@ -1,7 +1,31 @@
+// src/modules/posts/infrastructure/repositories/post-like-status-query.repository.ts
 import { BaseQueryRepository } from "../../../../shared/infrastructures/repositories/base-query.repository";
-import { NewestLike, PostLikesInfo } from "../../domain/interfaces/post.interface";
+import { ObjectId } from "mongodb";
 import { LikeStatusEnum } from "../../../comments/domain/interfaces/like-status.interface";
-import { PostLikeStatusModel } from "../../domain/interfaces/post-like-status.interface";
+
+// Define models locally to avoid external dependencies
+interface PostLikeStatusModel {
+    _id: ObjectId;
+    userId: string;
+    userLogin: string;
+    postId: string;
+    status: LikeStatusEnum;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface NewestLike {
+    addedAt: string;
+    userId: string;
+    login: string;
+}
+
+interface PostLikesInfo {
+    likesCount: number;
+    dislikesCount: number;
+    myStatus: LikeStatusEnum;
+    newestLikes: NewestLike[];
+}
 
 export class PostLikeStatusQueryRepository extends BaseQueryRepository<PostLikeStatusModel> {
     constructor() {
@@ -9,70 +33,108 @@ export class PostLikeStatusQueryRepository extends BaseQueryRepository<PostLikeS
     }
 
     async getLikesInfo(postId: string, userId?: string): Promise<PostLikesInfo> {
-        this.checkInit();
+        try {
+            this.checkInit();
 
-        console.log(`[LIKES DEBUG] Getting likes for post ${postId} with userId ${userId || 'NONE'}`);
+            if (!this.collection) {
+                console.error('Collection not initialized');
+                return {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                    myStatus: 'None',
+                    newestLikes: []
+                };
+            }
 
-        const [likesCount, dislikesCount] = await Promise.all([
-            this.collection.countDocuments({ postId, status: 'Like' }),
-            this.collection.countDocuments({ postId, status: 'Dislike' })
-        ]);
+            console.log(`Getting likes info for postId=${postId}, userId=${userId || 'none'}`);
 
-        console.log(`[LIKES DEBUG] Counts: likes=${likesCount}, dislikes=${dislikesCount}`);
+            // Get likes count
+            const likesCount = await this.collection.countDocuments({
+                postId,
+                status: 'Like'
+            });
 
-        let myStatus: LikeStatusEnum = 'None';
+            // Get dislikes count
+            const dislikesCount = await this.collection.countDocuments({
+                postId,
+                status: 'Dislike'
+            });
 
-        if (userId) {
-            try {
-                // For debugging, get ALL like status records for this post
-                const allLikes = await this.collection.find({ postId }).toArray();
-                console.log(`[LIKES DEBUG] All like records for post ${postId}:`,
-                    allLikes.map(r => ({ userId: r.userId, status: r.status })));
-
-                const userRecord = await this.collection.findOne({
+            // Get user's like status
+            let myStatus: LikeStatusEnum = 'None';
+            if (userId) {
+                const userLike = await this.collection.findOne({
                     postId,
                     userId
                 });
 
-                console.log(`[LIKES DEBUG] User record for userId=${userId}:`, userRecord);
-
-                if (userRecord) {
-                    myStatus = userRecord.status;
-                    console.log(`[LIKES DEBUG] Setting myStatus to ${myStatus}`);
-                } else {
-                    console.log(`[LIKES DEBUG] No record found for userId=${userId}, setting myStatus=None`);
+                if (userLike) {
+                    myStatus = userLike.status;
                 }
-            } catch (error) {
-                console.error(`[LIKES DEBUG] Error finding status:`, error);
             }
-        } else {
-            console.log(`[LIKES DEBUG] No userId provided, setting myStatus=None`);
+
+            // Get 3 newest likes
+            const newestLikes = await this.collection
+                .find({
+                    postId,
+                    status: 'Like'
+                })
+                .sort({
+                    updatedAt: -1
+                })
+                .limit(3)
+                .toArray();
+
+            // Map to required format
+            const mappedNewestLikes: NewestLike[] = newestLikes.map(like => ({
+                addedAt: like.createdAt,
+                userId: like.userId,
+                login: like.userLogin || 'unknown'
+            }));
+
+            console.log(`Like info results: likes=${likesCount}, dislikes=${dislikesCount}, myStatus=${myStatus}, newestLikes.length=${mappedNewestLikes.length}`);
+
+            return {
+                likesCount,
+                dislikesCount,
+                myStatus,
+                newestLikes: mappedNewestLikes
+            };
+        } catch (error) {
+            console.error('Error in getLikesInfo:', error);
+            // Return default values in case of error
+            return {
+                likesCount: 0,
+                dislikesCount: 0,
+                myStatus: 'None',
+                newestLikes: []
+            };
         }
-
-        // Get newest likes (latest 3 users who liked the post)
-        const newestLikes: NewestLike[] = await this.collection
-            .find({ postId, status: 'Like' })
-            .sort({ updatedAt: -1 })
-            .limit(3)
-            .toArray()
-            .then(items => items.map(item => ({
-                addedAt: item.createdAt,
-                userId: item.userId,
-                login: item.userLogin
-            })));
-
-        return {
-            likesCount,
-            dislikesCount,
-            myStatus,
-            newestLikes
-        };
     }
 
     async getUserStatus(postId: string, userId: string): Promise<LikeStatusEnum> {
-        this.checkInit();
+        try {
+            this.checkInit();
 
-        const record = await this.collection.findOne({ postId, userId });
-        return record ? record.status : 'None';
+            if (!this.collection) {
+                console.error('Collection not initialized');
+                return 'None';
+            }
+
+            if (!userId || !postId) {
+                console.warn('Missing userId or postId in getUserStatus');
+                return 'None';
+            }
+
+            const record = await this.collection.findOne({
+                postId,
+                userId
+            });
+
+            return record ? record.status : 'None';
+        } catch (error) {
+            console.error('Error in getUserStatus:', error);
+            return 'None';
+        }
     }
 }
