@@ -14,6 +14,9 @@ import {
 import {
     PostLikeStatusCommandRepository
 } from "../../../posts/infrastructure/repositories/post-like-status-command.repository";
+import {
+    UserConfirmationRepository
+} from "../../../auth/infrastructure/repositories/user-confirmation.repository";
 
 export class DeleteAllDataUseCase {
     constructor(
@@ -26,6 +29,7 @@ export class DeleteAllDataUseCase {
         private commentsCommandRepository: CommentsCommandRepository,
         private likeStatusCommandRepository: LikeStatusCommandRepository,
         private postLikeStatusCommandRepository: PostLikeStatusCommandRepository,
+        private userConfirmationRepository: UserConfirmationRepository,
     ) {}
 
     async execute(): Promise<void> {
@@ -39,7 +43,7 @@ export class DeleteAllDataUseCase {
             this.commentsCommandRepository.deleteAll(),
             this.likeStatusCommandRepository.deleteAll(),
             this.postLikeStatusCommandRepository.deleteAll(),
-
+            this.userConfirmationRepository.deleteAll(),
         ]);
     }
 }

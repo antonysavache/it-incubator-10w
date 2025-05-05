@@ -42,4 +42,9 @@ export class UserConfirmationRepository extends BaseCommandRepository<UserConfir
         );
         return result.modifiedCount === 1;
     }
+
+    async deleteAll(): Promise<void> {
+        this.checkInit();
+        await this.collection.deleteMany({});
+    }
 }

@@ -8,7 +8,8 @@ import {
     passwordRecoveryRepository, postLikeStatusCommandRepository,
     postsCommandRepository,
     tokenCommandRepository,
-    usersCommandRepository
+    usersCommandRepository,
+    userConfirmationRepository
 } from "./repositories";
 
 export const deleteAllDataUseCase = new DeleteAllDataUseCase(
@@ -20,7 +21,8 @@ export const deleteAllDataUseCase = new DeleteAllDataUseCase(
     passwordRecoveryRepository,
     commentsCommandRepository,
     likeStatusCommandRepository,
-    postLikeStatusCommandRepository
+    postLikeStatusCommandRepository,
+    userConfirmationRepository
 );
 
 export const testingController = new TestingController(
