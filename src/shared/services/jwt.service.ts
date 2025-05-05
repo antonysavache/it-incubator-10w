@@ -49,7 +49,15 @@ export class JwtService {
             }
             return payload;
         } catch (error) {
-            console.error('Token verification failed:', error);
+            // Проверка на причину ошибки
+            if (error instanceof jwt.TokenExpiredError) {
+                console.error('Token has expired:', error);
+            } else if (error instanceof jwt.JsonWebTokenError) {
+                console.error('Invalid token format:', error);
+            } else {
+                console.error('Token verification failed:', error);
+            }
+            // В любом случае возвращаем null
             return null;
         }
     }
